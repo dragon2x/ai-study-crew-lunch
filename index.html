@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Study Crew - 점심 메뉴 선택</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+      background: #f5f5f7;
+      min-height: 100vh;
+      padding: 60px 20px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      color: #1d1d1f;
+      margin-bottom: 8px;
+      font-size: 56px;
+      font-weight: 600;
+      letter-spacing: -0.015em;
+      text-align: center;
+    }
+
+    .subtitle {
+      color: #6e6e73;
+      margin-bottom: 60px;
+      font-size: 21px;
+      font-weight: 400;
+      text-align: center;
+      letter-spacing: 0.011em;
+    }
+
+    .restaurant-banner {
+      background: linear-gradient(135deg, #ff9500, #ff6b00);
+      color: white;
+      padding: 28px 32px;
+      border-radius: 18px;
+      text-align: center;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 16px rgba(255, 149, 0, 0.3);
+    }
+
+    .restaurant-banner.mcdonalds {
+      background: linear-gradient(135deg, #da291c, #ffbc0d);
+    }
+
+    .restaurant-banner.ssamai {
+      background: linear-gradient(135deg, #2d8a4e, #4ade80);
+    }
+
+    .restaurant-banner .restaurant-icon {
+      font-size: 48px;
+      margin-bottom: 8px;
+    }
+
+    .restaurant-banner .restaurant-label {
+      font-size: 15px;
+      font-weight: 400;
+      opacity: 0.9;
+      margin-bottom: 4px;
+    }
+
+    .restaurant-banner .restaurant-name {
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.015em;
+    }
+
+    .restaurant-toggle {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .restaurant-toggle-btn {
+      background: rgba(255, 255, 255, 0.25);
+      color: white;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-family: inherit;
+    }
+
+    .restaurant-toggle-btn:hover {
+      background: rgba(255, 255, 255, 0.35);
+    }
+
+    .restaurant-toggle-btn.active {
+      background: white;
+      color: #1d1d1f;
+      border-color: white;
+    }
+
+    .meeting-info {
+      background: #0071e3;
+      color: white;
+      padding: 16px 32px;
+      border-radius: 18px;
+      text-align: center;
+      margin-bottom: 48px;
+      box-shadow: 0 4px 16px rgba(0, 113, 227, 0.25);
+    }
+
+    .meeting-info .date-label {
+      font-size: 15px;
+      font-weight: 400;
+      opacity: 0.8;
+      margin-bottom: 2px;
+    }
+
+    .meeting-info .date-value {
+      font-size: 21px;
+      font-weight: 600;
+      letter-spacing: -0.015em;
+    }
+
+    .meeting-info.not-meeting-day {
+      background: #86868b;
+      box-shadow: 0 4px 16px rgba(134, 134, 139, 0.25);
+    }
+
+    .section {
+      margin-bottom: 60px;
+    }
+
+    .section h2 {
+      color: #1d1d1f;
+      margin-bottom: 32px;
+      font-size: 32px;
+      font-weight: 600;
+      letter-spacing: -0.005em;
+      text-align: center;
+    }
+
+    .members-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 12px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .member-card {
+      background: white;
+      padding: 24px 16px;
+      border-radius: 18px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: 2px solid #d2d2d7;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .member-card:hover {
+      border-color: #0071e3;
+      transform: scale(1.02);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    .member-card.selected {
+      background: #0071e3;
+      border-color: #0071e3;
+      box-shadow: 0 4px 16px rgba(0, 113, 227, 0.25);
+    }
+
+    .member-card.selected .member-name {
+      color: white;
+    }
+
+    .member-card.submitted {
+      border-color: #34c759;
+      background: #f0faf3;
+    }
+
+    .member-card.submitted .member-name::after {
+      content: ' \u2713';
+      color: #34c759;
+      font-weight: 700;
+    }
+
+    .member-name {
+      font-weight: 500;
+      color: #1d1d1f;
+      font-size: 17px;
+      letter-spacing: -0.022em;
+    }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .menu-card {
+      background: white;
+      padding: 28px 20px;
+      border-radius: 18px;
+      border: 2px solid #d2d2d7;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      text-align: center;
+    }
+
+    .menu-card:hover {
+      border-color: #ff9500;
+      transform: scale(1.02);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    .menu-card.selected {
+      background: #ff9500;
+      border-color: #ff9500;
+      box-shadow: 0 4px 16px rgba(255, 149, 0, 0.3);
+    }
+
+    .menu-card.selected .menu-name,
+    .menu-card.selected .menu-price {
+      color: white;
+    }
+
+    .menu-name {
+      font-weight: 600;
+      font-size: 16px;
+      color: #1d1d1f;
+      letter-spacing: -0.022em;
+      line-height: 1.4;
+    }
+
+    .menu-price {
+      font-size: 14px;
+      color: #6e6e73;
+      margin-top: 6px;
+      font-weight: 500;
+    }
+
+    .custom-input-container {
+      max-width: 500px;
+      margin: 20px auto 0;
+      display: none;
+    }
+
+    .custom-input-container.visible {
+      display: block;
+    }
+
+    .custom-input {
+      width: 100%;
+      padding: 14px 20px;
+      border: 2px solid #d2d2d7;
+      border-radius: 14px;
+      font-size: 17px;
+      font-family: inherit;
+      transition: all 0.3s;
+      text-align: center;
+    }
+
+    .custom-input:focus {
+      outline: none;
+      border-color: #ff9500;
+      box-shadow: 0 0 0 4px rgba(255, 149, 0, 0.1);
+    }
+
+    .submit-section {
+      text-align: center;
+      margin-top: 40px;
+      margin-bottom: 80px;
+    }
+
+    .submit-btn {
+      background: #ff9500;
+      color: white;
+      border: none;
+      padding: 16px 48px;
+      font-size: 17px;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 16px rgba(255, 149, 0, 0.3);
+    }
+
+    .submit-btn:hover {
+      background: #e68600;
+      transform: scale(1.02);
+    }
+
+    .submit-btn:disabled {
+      background: #d2d2d7;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .status-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      background: white;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    }
+
+    .status-table th,
+    .status-table td {
+      padding: 16px 20px;
+      text-align: center;
+      border-bottom: 1px solid #d2d2d7;
+    }
+
+    .status-table th {
+      background: #fbfbfd;
+      color: #1d1d1f;
+      font-weight: 600;
+      font-size: 15px;
+      letter-spacing: -0.016em;
+    }
+
+    .status-table tbody tr:hover {
+      background: #f5f5f7;
+    }
+
+    .status-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .not-submitted-cell {
+      color: #86868b;
+      font-style: italic;
+    }
+
+    .menu-badge {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 15px;
+      font-weight: 500;
+    }
+
+    .menu-summary {
+      background: white;
+      padding: 48px 32px;
+      border-radius: 18px;
+      margin-top: 40px;
+      text-align: center;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    }
+
+    .menu-summary h3 {
+      font-size: 21px;
+      margin-bottom: 24px;
+      color: #6e6e73;
+      font-weight: 500;
+    }
+
+    .summary-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: center;
+    }
+
+    .summary-item {
+      background: #f5f5f7;
+      padding: 16px 24px;
+      border-radius: 14px;
+      min-width: 120px;
+    }
+
+    .summary-menu-name {
+      font-size: 15px;
+      color: #6e6e73;
+      margin-bottom: 4px;
+    }
+
+    .summary-count {
+      font-size: 28px;
+      font-weight: 600;
+      color: #1d1d1f;
+    }
+
+    .summary-members {
+      font-size: 13px;
+      color: #86868b;
+      margin-top: 4px;
+    }
+
+    .copy-btn {
+      background: #34c759;
+      color: white;
+      border: none;
+      padding: 12px 28px;
+      font-size: 15px;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 24px;
+    }
+
+    .copy-btn:hover {
+      background: #2da84a;
+      transform: scale(1.02);
+    }
+
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(245, 245, 247, 0.95);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      opacity: 1;
+      transition: opacity 0.3s ease;
+    }
+
+    .loading-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid #d2d2d7;
+      border-top: 4px solid #ff9500;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      margin-left: 20px;
+      font-size: 17px;
+      color: #1d1d1f;
+      font-weight: 500;
+    }
+
+    .menu-card.skip {
+      border-style: dashed;
+      background: #fbfbfd;
+    }
+
+    .menu-card.skip.selected {
+      background: #86868b;
+      border-color: #86868b;
+      border-style: solid;
+    }
+
+    .naver-place-link {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 10px 24px;
+      background: #03c75a;
+      color: white;
+      text-decoration: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    .naver-place-link:hover {
+      background: #02b350;
+      transform: scale(1.02);
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 36px;
+      }
+
+      .subtitle {
+        font-size: 17px;
+        margin-bottom: 40px;
+      }
+
+      .section h2 {
+        font-size: 24px;
+        margin-bottom: 20px;
+      }
+
+      .menu-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      }
+
+      .restaurant-banner .restaurant-name {
+        font-size: 22px;
+      }
+
+      .meeting-info .date-value {
+        font-size: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">데이터 불러오는 중...</div>
+  </div>
+
+  <div class="container">
+    <h1>AI Study Crew</h1>
+    <p class="subtitle">오늘의 점심 메뉴를 선택해주세요</p>
+
+    <div class="restaurant-banner" id="restaurantBanner">
+      <div class="restaurant-icon" id="restaurantIcon"></div>
+      <div class="restaurant-label">오늘의 식당</div>
+      <div class="restaurant-name" id="restaurantName">불러오는 중...</div>
+      <div class="restaurant-toggle">
+        <button class="restaurant-toggle-btn active" id="btnMcdonalds" onclick="switchRestaurant('mcdonalds')">🍔 맥도날드</button>
+        <button class="restaurant-toggle-btn" id="btnSsamai" onclick="switchRestaurant('ssamai')">🍚 쌈마이닭쌈밥</button>
+      </div>
+    </div>
+
+    <div class="meeting-info" id="meetingInfo">
+      <div class="date-label" id="dateLabel">오늘 모임일</div>
+      <div class="date-value" id="meetingDateDisplay">불러오는 중...</div>
+    </div>
+
+    <div id="mainContent">
+      <div class="section">
+        <h2>본인을 선택해주세요</h2>
+        <div class="members-list" id="membersList"></div>
+      </div>
+
+      <div class="section">
+        <h2>메뉴를 선택해주세요</h2>
+        <div class="menu-grid" id="menuGrid"></div>
+        <div class="custom-input-container" id="customInputContainer">
+          <input type="text" class="custom-input" id="customMenuInput" placeholder="원하는 메뉴를 입력해주세요" />
+        </div>
+      </div>
+
+      <div class="submit-section">
+        <button class="submit-btn" id="submitBtn" onclick="submitSelection()" disabled>선택 완료</button>
+      </div>
+
+      <div class="section">
+        <h2>선택 현황</h2>
+        <div id="statusTableContainer"></div>
+      </div>
+
+      <div id="summaryBox"></div>
+    </div>
+  </div>
+
+  <script>
+    // ===== 설정 =====
+    const STUDY_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz2CCEL-5_-BHuSrVxEzSyQGmoFEfXyPGniQ_spVDmeBmtxoBajTboZuo_xK9ngyHIv7A/exec';
+    const LUNCH_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfdux35LNtUo28dp3cMnYpVUijr_89xPnrdRpRRpNbJYRoxSaam1IqmFTYdbQ66I4e/exec';
+
+    // ===== 식당 & 메뉴 데이터 =====
+    const RESTAURANTS = {
+      mcdonalds: {
+        name: '맥도날드 울산옥현점',
+        icon: '\uD83C\uDF54',
+        bannerClass: 'mcdonalds',
+        naverPlaceUrl: 'https://map.naver.com/p/search/%EB%A7%A5%EB%8F%84%EB%82%A0%EB%93%9C%20%EC%9A%B8%EC%82%B0%EB%8C%80%ED%95%99/place/11807389?placePath=/menu',
+        menus: [
+          { id: 'bigmac', name: '빅맥 세트', price: '9,000원' },
+          { id: 'shanghai', name: '맥스파이시 상하이버거 세트', price: '9,100원' },
+          { id: '1955', name: '1955 버거 세트', price: '9,800원' },
+          { id: 'bulgogi', name: '불고기버거 세트', price: '6,900원' },
+          { id: 'double_bulgogi', name: '더블 불고기버거 세트', price: '8,200원' },
+          { id: 'shushu', name: '슈슈버거 세트', price: '7,400원' },
+          { id: 'mcchicken', name: '맥치킨 세트', price: '7,000원' },
+          { id: 'mcchicken_mozz', name: '맥치킨 모짜렐라 세트', price: '8,700원' }
+        ]
+      },
+      ssamai: {
+        name: '쌈마이닭쌈밥 무거점',
+        icon: '\uD83C\uDF5A',
+        bannerClass: 'ssamai',
+        naverPlaceUrl: 'https://map.naver.com/p/entry/place/1220681461?placePath=/menu',
+        menus: [
+          { id: 'roast', name: '쌈마이 닭쌈밥 백반도시락', price: '8,900원' },
+          { id: 'yangnyeom', name: '양념 닭쌈밥 백반도시락', price: '9,500원' },
+          { id: 'fire', name: '핵불닭쌈밥 백반도시락', price: '9,500원' },
+          { id: 'garlic', name: '마늘닭쌈밥 백반도시락', price: '9,500원' },
+          { id: 'gobabi', name: '고바비 백반도시락 (2인분)', price: '18,500원' }
+        ]
+      }
+    };
+
+    // ===== 상태 =====
+    let allMembers = [];
+    let selectedMember = null;
+    let selectedMenu = null;
+    let lunchData = {};
+    let meetingDate = null;
+    let todayRestaurantKey = null;
+    let todayRestaurant = null;
+
+    // ===== 식당 선택 (기본: 맥도날드) =====
+    function selectTodayRestaurant() {
+      todayRestaurantKey = 'mcdonalds';
+      todayRestaurant = RESTAURANTS[todayRestaurantKey];
+      return todayRestaurant;
+    }
+
+    function switchRestaurant(key) {
+      todayRestaurantKey = key;
+      todayRestaurant = RESTAURANTS[key];
+
+      // 메뉴 선택 초기화
+      selectedMenu = null;
+
+      renderRestaurantBanner();
+      renderMenuGrid();
+      updateSubmitButton();
+      updateToggleButtons();
+    }
+
+    function updateToggleButtons() {
+      document.getElementById('btnMcdonalds').classList.toggle('active', todayRestaurantKey === 'mcdonalds');
+      document.getElementById('btnSsamai').classList.toggle('active', todayRestaurantKey === 'ssamai');
+    }
+
+    // ===== 유틸리티 함수 =====
+    function getISOWeekString(date) {
+      const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+      const dayNum = d.getUTCDay() || 7;
+      d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+      const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+      const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+      const year = d.getUTCFullYear();
+      return year + '-W' + (weekNo < 10 ? '0' : '') + weekNo;
+    }
+
+    function getCurrentWeekId() {
+      const today = new Date();
+      const currentDay = today.getDay();
+      const mon = new Date(today);
+      if (currentDay === 0) {
+        mon.setDate(today.getDate() - 6);
+      } else {
+        mon.setDate(today.getDate() + (1 - currentDay));
+      }
+      return getISOWeekString(mon);
+    }
+
+    function getThisWeekDates() {
+      const today = new Date();
+      const currentDay = today.getDay();
+      const targetDays = [
+        { day: 3, name: '수요일', key: 'wed' },
+        { day: 4, name: '목요일', key: 'thu' },
+        { day: 5, name: '금요일', key: 'fri' }
+      ];
+
+      return targetDays.map(target => {
+        const diff = target.day - currentDay;
+        const targetDate = new Date(today);
+        targetDate.setDate(today.getDate() + diff);
+        const month = targetDate.getMonth() + 1;
+        const day = targetDate.getDate();
+        return {
+          value: target.key,
+          display: `${month}월 ${day}일`,
+          dayName: target.name,
+          dateObj: targetDate
+        };
+      });
+    }
+
+    function getTodayKey() {
+      const dayMap = { 3: 'wed', 4: 'thu', 5: 'fri' };
+      return dayMap[new Date().getDay()] || null;
+    }
+
+    function formatDate(dayKey) {
+      const weekDates = getThisWeekDates();
+      const dateInfo = weekDates.find(d => d.value === dayKey);
+      if (dateInfo) return `${dateInfo.display} (${dateInfo.dayName})`;
+      return dayKey;
+    }
+
+    function getMenuDisplayName(menuChoice, customMenu) {
+      if (menuChoice === 'skip') return '미선택 (안 먹음)';
+      if (menuChoice === 'other' && customMenu) {
+        return customMenu;
+      }
+      if (todayRestaurant) {
+        const menu = todayRestaurant.menus.find(m => m.id === menuChoice);
+        if (menu) return menu.name;
+      }
+      // 다른 식당의 메뉴일 수도 있으므로 전체 검색
+      for (const key of Object.keys(RESTAURANTS)) {
+        const menu = RESTAURANTS[key].menus.find(m => m.id === menuChoice);
+        if (menu) return menu.name;
+      }
+      return menuChoice;
+    }
+
+    // ===== 데이터 로드 =====
+    function hideLoading() {
+      const overlay = document.getElementById('loadingOverlay');
+      if (overlay) {
+        overlay.classList.add('hidden');
+        setTimeout(() => { overlay.style.display = 'none'; }, 300);
+      }
+    }
+
+    async function checkTodayMeeting() {
+      const weekId = getCurrentWeekId();
+      const todayKey = getTodayKey();
+
+      if (!todayKey) {
+        return { isMeetingDay: false, todayKey: null };
+      }
+
+      try {
+        const response = await fetch(
+          STUDY_SCRIPT_URL + '?action=load&weekId=' + encodeURIComponent(weekId),
+          { cache: 'no-cache' }
+        );
+        const data = await response.json();
+
+        if (!data.success) {
+          return { isMeetingDay: false, todayKey: null };
+        }
+
+        if (data.members) allMembers = data.members;
+
+        const availability = data.availability || {};
+        const allDates = ['wed', 'thu', 'fri'];
+
+        let maxCount = 0;
+        let bestDates = [];
+
+        allDates.forEach(date => {
+          let count = 0;
+          allMembers.forEach(member => {
+            if (availability[date] && availability[date][member]) {
+              count++;
+            }
+          });
+          if (count > maxCount) {
+            maxCount = count;
+            bestDates = [date];
+          } else if (count === maxCount && count > 0) {
+            bestDates.push(date);
+          }
+        });
+
+        const isMeetingDay = bestDates.includes(todayKey);
+        return { isMeetingDay, todayKey, bestDates, maxCount };
+      } catch (error) {
+        console.error('스터디 일정 로드 실패:', error);
+        // API 접근 불가 시 기본 멤버 목록 사용
+        if (allMembers.length === 0) {
+          allMembers = ['김근아', '나희진', '이상용', '이예진', '이용성', '조인주', '황성욱'];
+        }
+        return { isMeetingDay: true, todayKey, bestDates: [todayKey], maxCount: 0 };
+      }
+    }
+
+    async function loadLunchData() {
+      const weekId = getCurrentWeekId();
+      try {
+        const response = await fetch(
+          LUNCH_SCRIPT_URL + '?action=loadLunch&weekId=' + encodeURIComponent(weekId),
+          { cache: 'no-cache' }
+        );
+        const data = await response.json();
+        if (data.success) {
+          lunchData = data.lunchData || {};
+          if (data.members && data.members.length > 0) {
+            allMembers = data.members;
+          }
+        }
+      } catch (error) {
+        console.error('점심 데이터 로드 실패:', error);
+      }
+    }
+
+    async function saveLunchData() {
+      const weekId = getCurrentWeekId();
+      const customMenu = selectedMenu === 'other'
+        ? document.getElementById('customMenuInput').value.trim()
+        : '';
+
+      try {
+        await fetch(LUNCH_SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'saveLunch',
+            weekId: weekId,
+            memberName: selectedMember,
+            menuChoice: selectedMenu,
+            customMenu: customMenu,
+            restaurant: todayRestaurantKey
+          })
+        });
+      } catch (error) {
+        console.error('점심 메뉴 저장 실패:', error);
+      }
+    }
+
+    // ===== 렌더링 =====
+    function renderRestaurantBanner() {
+      const banner = document.getElementById('restaurantBanner');
+      const iconEl = document.getElementById('restaurantIcon');
+      const nameEl = document.getElementById('restaurantName');
+
+      banner.className = 'restaurant-banner ' + todayRestaurant.bannerClass;
+      iconEl.textContent = todayRestaurant.icon;
+      nameEl.textContent = todayRestaurant.name;
+    }
+
+    function renderMembers() {
+      const container = document.getElementById('membersList');
+      container.innerHTML = allMembers.map(member => {
+        const isSelected = selectedMember === member;
+        const hasSubmitted = lunchData[member];
+        let classes = 'member-card';
+        if (isSelected) classes += ' selected';
+        else if (hasSubmitted) classes += ' submitted';
+
+        return `
+          <div class="${classes}" onclick="selectMember('${member}')">
+            <span class="member-name">${member}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderMenuGrid() {
+      const container = document.getElementById('menuGrid');
+      const menus = [
+        ...todayRestaurant.menus,
+        { id: 'other', name: '기타 (직접 입력)' },
+        { id: 'skip', name: '미선택 (안 먹음)', isSkip: true }
+      ];
+
+      container.innerHTML = menus.map(menu => {
+        const isSelected = selectedMenu === menu.id;
+        const skipClass = menu.isSkip ? ' skip' : '';
+        return `
+          <div class="menu-card${skipClass} ${isSelected ? 'selected' : ''}" onclick="selectMenu('${menu.id}')">
+            <div class="menu-name">${menu.name}</div>
+            ${menu.price ? `<div class="menu-price">${menu.price}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+
+      // 네이버 플레이스 링크
+      container.innerHTML += `
+        <div style="grid-column: 1 / -1; text-align: center; margin-top: 8px;">
+          <a href="${todayRestaurant.naverPlaceUrl}" target="_blank" class="naver-place-link">
+            📍 네이버 플레이스에서 전체 메뉴 보기
+          </a>
+        </div>
+      `;
+
+      const customContainer = document.getElementById('customInputContainer');
+      if (selectedMenu === 'other') {
+        customContainer.classList.add('visible');
+      } else {
+        customContainer.classList.remove('visible');
+      }
+    }
+
+    function renderStatusTable() {
+      const container = document.getElementById('statusTableContainer');
+
+      let html = '<table class="status-table">';
+      html += '<thead><tr><th>멤버</th><th>선택 메뉴</th><th>시간</th></tr></thead>';
+      html += '<tbody>';
+
+      allMembers.forEach(member => {
+        const data = lunchData[member];
+        if (data) {
+          const menuDisplay = getMenuDisplayName(data.menuChoice, data.customMenu);
+          const time = data.timestamp ? new Date(data.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
+          html += `<tr>
+            <td><strong>${member}</strong></td>
+            <td><span class="menu-badge">${menuDisplay}</span></td>
+            <td>${time}</td>
+          </tr>`;
+        } else {
+          html += `<tr>
+            <td><strong>${member}</strong></td>
+            <td colspan="2" class="not-submitted-cell">미선택</td>
+          </tr>`;
+        }
+      });
+
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    function renderSummary() {
+      const container = document.getElementById('summaryBox');
+      const menuCounts = {};
+
+      Object.values(lunchData).forEach(data => {
+        const displayName = getMenuDisplayName(data.menuChoice, data.customMenu);
+        if (!menuCounts[displayName]) {
+          menuCounts[displayName] = { count: 0, members: [] };
+        }
+        menuCounts[displayName].count++;
+      });
+
+      Object.entries(lunchData).forEach(([member, data]) => {
+        const displayName = getMenuDisplayName(data.menuChoice, data.customMenu);
+        if (menuCounts[displayName]) {
+          menuCounts[displayName].members.push(member);
+        }
+      });
+
+      const totalSubmitted = Object.keys(lunchData).length;
+
+      if (totalSubmitted === 0) {
+        container.innerHTML = `
+          <div class="menu-summary">
+            <h3>아직 메뉴를 선택한 멤버가 없습니다</h3>
+          </div>
+        `;
+        return;
+      }
+
+      const summaryItems = Object.entries(menuCounts)
+        .sort((a, b) => b[1].count - a[1].count)
+        .map(([menu, info]) => `
+          <div class="summary-item">
+            <div class="summary-menu-name">${menu}</div>
+            <div class="summary-count">${info.count}명</div>
+            <div class="summary-members">${info.members.join(', ')}</div>
+          </div>
+        `).join('');
+
+      container.innerHTML = `
+        <div class="menu-summary">
+          <h3>메뉴 선택 현황 (${totalSubmitted}명 / ${allMembers.length}명)</h3>
+          <div class="summary-grid">${summaryItems}</div>
+          <button class="copy-btn" onclick="copyToClipboard()">📋 현황 복사</button>
+        </div>
+      `;
+    }
+
+    // ===== 이벤트 핸들러 =====
+    function selectMember(name) {
+      selectedMember = name;
+
+      if (lunchData[name]) {
+        selectedMenu = lunchData[name].menuChoice;
+        if (selectedMenu === 'other') {
+          document.getElementById('customMenuInput').value = lunchData[name].customMenu || '';
+        }
+      } else {
+        selectedMenu = null;
+      }
+
+      renderMembers();
+      renderMenuGrid();
+      updateSubmitButton();
+    }
+
+    function selectMenu(menuId) {
+      if (!selectedMember) {
+        alert('먼저 본인을 선택해주세요.');
+        return;
+      }
+      selectedMenu = menuId;
+      renderMenuGrid();
+      updateSubmitButton();
+
+      if (menuId === 'other') {
+        setTimeout(() => document.getElementById('customMenuInput').focus(), 100);
+      }
+    }
+
+    function updateSubmitButton() {
+      const btn = document.getElementById('submitBtn');
+      if (selectedMember && selectedMenu) {
+        if (selectedMenu === 'other') {
+          const customVal = document.getElementById('customMenuInput').value.trim();
+          btn.disabled = !customVal;
+        } else {
+          btn.disabled = false;
+        }
+      } else {
+        btn.disabled = true;
+      }
+    }
+
+    async function submitSelection() {
+      if (!selectedMember || !selectedMenu) return;
+
+      if (selectedMenu === 'other') {
+        const customVal = document.getElementById('customMenuInput').value.trim();
+        if (!customVal) {
+          alert('메뉴를 입력해주세요.');
+          return;
+        }
+      }
+
+      const customMenu = selectedMenu === 'other'
+        ? document.getElementById('customMenuInput').value.trim()
+        : '';
+
+      lunchData[selectedMember] = {
+        menuChoice: selectedMenu,
+        customMenu: customMenu,
+        timestamp: new Date().toISOString()
+      };
+
+      await saveLunchData();
+
+      const prevMember = selectedMember;
+      selectedMember = null;
+      selectedMenu = null;
+
+      renderMembers();
+      renderMenuGrid();
+      renderStatusTable();
+      renderSummary();
+      updateSubmitButton();
+
+      alert(`${prevMember}님의 메뉴가 선택되었습니다!`);
+    }
+
+    async function copyToClipboard() {
+      const totalSubmitted = Object.keys(lunchData).length;
+      const menuGroups = {};
+
+      Object.entries(lunchData).forEach(([member, data]) => {
+        const displayName = getMenuDisplayName(data.menuChoice, data.customMenu);
+        if (!menuGroups[displayName]) menuGroups[displayName] = [];
+        menuGroups[displayName].push(member);
+      });
+
+      let text = `🍽️ AI Study Crew 점심 메뉴 현황\n`;
+      text += `🏪 ${todayRestaurant.icon} ${todayRestaurant.name}\n`;
+      text += `📅 ${meetingDate ? formatDate(meetingDate) : '오늘'}\n`;
+      text += `👥 ${totalSubmitted}명 / ${allMembers.length}명 선택 완료\n\n`;
+
+      Object.entries(menuGroups)
+        .sort((a, b) => b[1].length - a[1].length)
+        .forEach(([menu, members]) => {
+          text += `${menu}: ${members.join(', ')} (${members.length}명)\n`;
+        });
+
+      try {
+        await navigator.clipboard.writeText(text);
+        alert('현황이 클립보드에 복사되었습니다!');
+      } catch (error) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+          document.execCommand('copy');
+          alert('현황이 클립보드에 복사되었습니다!');
+        } catch (err) {
+          alert('클립보드 복사에 실패했습니다.');
+        }
+        document.body.removeChild(textarea);
+      }
+    }
+
+    // ===== 초기화 =====
+    async function init() {
+      document.getElementById('customMenuInput').addEventListener('input', updateSubmitButton);
+      document.getElementById('customMenuInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') submitSelection();
+      });
+
+      // 오늘의 식당 랜덤 선정
+      selectTodayRestaurant();
+      renderRestaurantBanner();
+
+      // 스터디 앱에서 모임 정보 로드
+      const result = await checkTodayMeeting();
+      meetingDate = result.todayKey;
+
+      const meetingInfoEl = document.getElementById('meetingInfo');
+      const dateLabelEl = document.getElementById('dateLabel');
+      const dateDisplayEl = document.getElementById('meetingDateDisplay');
+
+      if (result.isMeetingDay && result.todayKey) {
+        dateLabelEl.textContent = '오늘 모임일';
+        dateDisplayEl.textContent = formatDate(result.todayKey);
+      } else {
+        meetingInfoEl.classList.add('not-meeting-day');
+        dateLabelEl.textContent = '오늘은 모임일이 아닙니다';
+        const today = new Date();
+        dateDisplayEl.textContent = `${today.getMonth() + 1}월 ${today.getDate()}일`;
+      }
+
+      // 점심 데이터 로드
+      await loadLunchData();
+
+      renderMembers();
+      renderMenuGrid();
+      renderStatusTable();
+      renderSummary();
+      hideLoading();
+
+      // 10초마다 자동 갱신
+      setInterval(async () => {
+        await loadLunchData();
+        renderMembers();
+        renderStatusTable();
+        renderSummary();
+      }, 10000);
+    }
+
+    init();
+  </script>
+</body>
+</html>
