@@ -173,10 +173,17 @@ function doGet(e) {
 function doPost(e) {
   var data;
   try {
-    data = JSON.parse(e.postData.contents);
+    var rawBody = e.postData ? e.postData.contents : '';
+    if (!rawBody) {
+      return ContentService
+        .createTextOutput(JSON.stringify({ success: false, error: 'Empty request body' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    data = JSON.parse(rawBody);
   } catch (err) {
+    Logger.log('doPost parse error: ' + err.message + ' | body: ' + (e.postData ? e.postData.contents : 'null'));
     return ContentService
-      .createTextOutput(JSON.stringify({ success: false, error: 'Invalid JSON' }))
+      .createTextOutput(JSON.stringify({ success: false, error: 'Invalid JSON: ' + err.message }))
       .setMimeType(ContentService.MimeType.JSON);
   }
 

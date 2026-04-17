@@ -576,7 +576,7 @@
   <script>
     // ===== 설정 =====
     const STUDY_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz2CCEL-5_-BHuSrVxEzSyQGmoFEfXyPGniQ_spVDmeBmtxoBajTboZuo_xK9ngyHIv7A/exec';
-    const LUNCH_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfdux35LNtUo28dp3cMnYpVUijr_89xPnrdRpRRpNbJYRoxSaam1IqmFTYdbQ66I4e/exec';
+    const LUNCH_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzBOtwiouFGQnQGlJngBCQTe8G_uc-p4mlJgIfepBY2mP2UBEcnmwDBbs9x8EHIZETi/exec';
 
     // ===== 식당 & 메뉴 데이터 =====
     const RESTAURANTS = {
@@ -810,21 +810,32 @@
         : '';
 
       try {
+        const payload = JSON.stringify({
+          action: 'saveLunch',
+          weekId: weekId,
+          memberName: selectedMember,
+          menuChoice: selectedMenu,
+          customMenu: customMenu,
+          restaurant: todayRestaurantKey
+        });
+
         await fetch(LUNCH_SCRIPT_URL, {
           method: 'POST',
           mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'saveLunch',
-            weekId: weekId,
-            memberName: selectedMember,
-            menuChoice: selectedMenu,
-            customMenu: customMenu,
-            restaurant: todayRestaurantKey
-          })
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: payload
         });
+
+        // no-cors에서는 응답을 읽을 수 없으므로, 1초 후 데이터 재로드로 확인
+        setTimeout(async () => {
+          await loadLunchData();
+          renderMembers();
+          renderStatusTable();
+          renderSummary();
+        }, 1500);
       } catch (error) {
         console.error('점심 메뉴 저장 실패:', error);
+        alert('저장 중 오류가 발생했습니다. 다시 시도해주세요.');
       }
     }
 
