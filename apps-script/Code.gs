@@ -161,6 +161,14 @@ function doGet(e) {
 
   if (action === 'loadLunch') {
     result = handleLoadLunch(e.parameter.weekId);
+  } else if (action === 'saveLunch') {
+    result = handleSaveLunch({
+      weekId: e.parameter.weekId,
+      memberName: e.parameter.memberName,
+      menuChoice: e.parameter.menuChoice,
+      customMenu: e.parameter.customMenu || '',
+      restaurant: e.parameter.restaurant || ''
+    });
   } else {
     result = { success: false, error: 'Unknown action' };
   }

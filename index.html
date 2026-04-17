@@ -810,7 +810,7 @@
         : '';
 
       try {
-        const payload = JSON.stringify({
+        const params = new URLSearchParams({
           action: 'saveLunch',
           weekId: weekId,
           memberName: selectedMember,
@@ -819,20 +819,21 @@
           restaurant: todayRestaurantKey
         });
 
-        await fetch(LUNCH_SCRIPT_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: payload
-        });
+        const saveUrl = LUNCH_SCRIPT_URL + '?' + params.toString();
+        const response = await fetch(saveUrl, { cache: 'no-cache' });
+        const result = await response.json();
 
-        // no-cors에서는 응답을 읽을 수 없으므로, 1초 후 데이터 재로드로 확인
-        setTimeout(async () => {
-          await loadLunchData();
-          renderMembers();
-          renderStatusTable();
-          renderSummary();
-        }, 1500);
+        if (!result.success) {
+          console.error('저장 실패:', result.error);
+          alert('저장에 실패했습니다: ' + result.error);
+          return;
+        }
+
+        // 저장 성공 후 데이터 재로드
+        await loadLunchData();
+        renderMembers();
+        renderStatusTable();
+        renderSummary();
       } catch (error) {
         console.error('점심 메뉴 저장 실패:', error);
         alert('저장 중 오류가 발생했습니다. 다시 시도해주세요.');
