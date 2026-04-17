@@ -1039,6 +1039,13 @@
         }
       }
 
+      // 즉시 버튼 피드백
+      const btn = document.getElementById('submitBtn');
+      const originalText = btn.textContent;
+      btn.textContent = '저장 중...';
+      btn.disabled = true;
+      btn.style.background = '#34c759';
+
       const customMenu = selectedMenu === 'other'
         ? document.getElementById('customMenuInput').value.trim()
         : '';
@@ -1049,19 +1056,27 @@
         timestamp: new Date().toISOString()
       };
 
+      // 즉시 화면 갱신 (서버 응답 기다리지 않고)
+      const prevMember = selectedMember;
+      renderStatusTable();
+      renderSummary();
+
       await saveLunchData();
 
-      const prevMember = selectedMember;
       selectedMember = null;
       selectedMenu = null;
 
+      btn.textContent = '✓ 완료!';
+      btn.style.background = '#34c759';
+
       renderMembers();
       renderMenuGrid();
-      renderStatusTable();
-      renderSummary();
       updateSubmitButton();
 
-      alert(`${prevMember}님의 메뉴가 선택되었습니다!`);
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.style.background = '';
+      }, 1500);
     }
 
     async function copyToClipboard() {
