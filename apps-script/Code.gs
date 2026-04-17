@@ -18,7 +18,7 @@ const CONFIG = {
   STUDY_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbz2CCEL-5_-BHuSrVxEzSyQGmoFEfXyPGniQ_spVDmeBmtxoBajTboZuo_xK9ngyHIv7A/exec',
   POWER_AUTOMATE_WEBHOOK_URL: 'YOUR_POWER_AUTOMATE_WEBHOOK_URL_HERE',
   LUNCH_WEB_APP_URL: 'YOUR_LUNCH_WEB_APP_URL_HERE',
-  DEFAULT_MEMBERS: ['김근아', '나희진', '이상용', '이예진', '이용성', '조인주', '황성욱']
+  DEFAULT_MEMBERS: ['김근아', '김동주', '나희진', '이상용', '이예진', '이용성', '조인주', '황성욱']
 };
 
 // ===== 식당 & 메뉴 데이터 (프론트엔드와 동일) =====

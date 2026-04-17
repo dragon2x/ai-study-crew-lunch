@@ -778,7 +778,7 @@
         console.error('스터디 일정 로드 실패:', error);
         // API 접근 불가 시 기본 멤버 목록 사용
         if (allMembers.length === 0) {
-          allMembers = ['김근아', '나희진', '이상용', '이예진', '이용성', '조인주', '황성욱'];
+          allMembers = ['김근아', '김동주', '나희진', '이상용', '이예진', '이용성', '조인주', '황성욱'];
         }
         return { isMeetingDay: true, todayKey, bestDates: [todayKey], maxCount: 0 };
       }
