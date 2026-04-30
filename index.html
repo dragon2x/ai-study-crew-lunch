@@ -1,1173 +1,934 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Study Crew - 점심 메뉴 선택</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
-      background: #f5f5f7;
-      min-height: 100vh;
-      padding: 60px 20px;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    .container {
-      max-width: 980px;
-      margin: 0 auto;
-    }
-
-    h1 {
-      color: #1d1d1f;
-      margin-bottom: 8px;
-      font-size: 56px;
-      font-weight: 600;
-      letter-spacing: -0.015em;
-      text-align: center;
-    }
-
-    .subtitle {
-      color: #6e6e73;
-      margin-bottom: 60px;
-      font-size: 21px;
-      font-weight: 400;
-      text-align: center;
-      letter-spacing: 0.011em;
-    }
-
-    .restaurant-banner {
-      background: linear-gradient(135deg, #ff9500, #ff6b00);
-      color: white;
-      padding: 28px 32px;
-      border-radius: 18px;
-      text-align: center;
-      margin-bottom: 16px;
-      box-shadow: 0 4px 16px rgba(255, 149, 0, 0.3);
-    }
-
-    .restaurant-banner.mcdonalds {
-      background: linear-gradient(135deg, #da291c, #ffbc0d);
-    }
-
-    .restaurant-banner.ssamai {
-      background: linear-gradient(135deg, #2d8a4e, #4ade80);
-    }
-
-    .restaurant-banner .restaurant-icon {
-      font-size: 48px;
-      margin-bottom: 8px;
-    }
-
-    .restaurant-banner .restaurant-label {
-      font-size: 15px;
-      font-weight: 400;
-      opacity: 0.9;
-      margin-bottom: 4px;
-    }
-
-    .restaurant-banner .restaurant-name {
-      font-size: 28px;
-      font-weight: 600;
-      letter-spacing: -0.015em;
-    }
-
-    .restaurant-toggle {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      margin-top: 16px;
-    }
-
-    .restaurant-toggle-btn {
-      background: rgba(255, 255, 255, 0.25);
-      color: white;
-      border: 2px solid rgba(255, 255, 255, 0.4);
-      padding: 8px 20px;
-      border-radius: 20px;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s;
-      font-family: inherit;
-    }
-
-    .restaurant-toggle-btn:hover {
-      background: rgba(255, 255, 255, 0.35);
-    }
-
-    .restaurant-toggle-btn.active {
-      background: white;
-      color: #1d1d1f;
-      border-color: white;
-    }
-
-    .meeting-info {
-      background: #0071e3;
-      color: white;
-      padding: 16px 32px;
-      border-radius: 18px;
-      text-align: center;
-      margin-bottom: 48px;
-      box-shadow: 0 4px 16px rgba(0, 113, 227, 0.25);
-    }
-
-    .meeting-info .date-label {
-      font-size: 15px;
-      font-weight: 400;
-      opacity: 0.8;
-      margin-bottom: 2px;
-    }
-
-    .meeting-info .date-value {
-      font-size: 21px;
-      font-weight: 600;
-      letter-spacing: -0.015em;
-    }
-
-    .meeting-info.not-meeting-day {
-      background: #86868b;
-      box-shadow: 0 4px 16px rgba(134, 134, 139, 0.25);
-    }
-
-    .section {
-      margin-bottom: 60px;
-    }
-
-    .section h2 {
-      color: #1d1d1f;
-      margin-bottom: 32px;
-      font-size: 32px;
-      font-weight: 600;
-      letter-spacing: -0.005em;
-      text-align: center;
-    }
-
-    .members-list {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      gap: 12px;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-
-    .member-card {
-      background: white;
-      padding: 24px 16px;
-      border-radius: 18px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      border: 2px solid #d2d2d7;
-      cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .member-card:hover {
-      border-color: #0071e3;
-      transform: scale(1.02);
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-    }
-
-    .member-card.selected {
-      background: #0071e3;
-      border-color: #0071e3;
-      box-shadow: 0 4px 16px rgba(0, 113, 227, 0.25);
-    }
-
-    .member-card.selected .member-name {
-      color: white;
-    }
-
-    .member-card.submitted {
-      border-color: #34c759;
-      background: #f0faf3;
-    }
-
-    .member-card.submitted .member-name::after {
-      content: ' \u2713';
-      color: #34c759;
-      font-weight: 700;
-    }
-
-    .member-name {
-      font-weight: 500;
-      color: #1d1d1f;
-      font-size: 17px;
-      letter-spacing: -0.022em;
-    }
-
-    .menu-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 12px;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-
-    .menu-card {
-      background: white;
-      padding: 28px 20px;
-      border-radius: 18px;
-      border: 2px solid #d2d2d7;
-      cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      text-align: center;
-    }
-
-    .menu-card:hover {
-      border-color: #ff9500;
-      transform: scale(1.02);
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-    }
-
-    .menu-card.selected {
-      background: #ff9500;
-      border-color: #ff9500;
-      box-shadow: 0 4px 16px rgba(255, 149, 0, 0.3);
-    }
-
-    .menu-card.selected .menu-name,
-    .menu-card.selected .menu-price {
-      color: white;
-    }
-
-    .menu-name {
-      font-weight: 600;
-      font-size: 16px;
-      color: #1d1d1f;
-      letter-spacing: -0.022em;
-      line-height: 1.4;
-    }
-
-    .menu-price {
-      font-size: 14px;
-      color: #6e6e73;
-      margin-top: 6px;
-      font-weight: 500;
-    }
-
-    .custom-input-container {
-      max-width: 500px;
-      margin: 20px auto 0;
-      display: none;
-    }
-
-    .custom-input-container.visible {
-      display: block;
-    }
-
-    .custom-input {
-      width: 100%;
-      padding: 14px 20px;
-      border: 2px solid #d2d2d7;
-      border-radius: 14px;
-      font-size: 17px;
-      font-family: inherit;
-      transition: all 0.3s;
-      text-align: center;
-    }
-
-    .custom-input:focus {
-      outline: none;
-      border-color: #ff9500;
-      box-shadow: 0 0 0 4px rgba(255, 149, 0, 0.1);
-    }
-
-    .submit-section {
-      text-align: center;
-      margin-top: 40px;
-      margin-bottom: 80px;
-    }
-
-    .submit-btn {
-      background: #ff9500;
-      color: white;
-      border: none;
-      padding: 16px 48px;
-      font-size: 17px;
-      font-weight: 600;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: all 0.3s;
-      box-shadow: 0 4px 16px rgba(255, 149, 0, 0.3);
-    }
-
-    .submit-btn:hover {
-      background: #e68600;
-      transform: scale(1.02);
-    }
-
-    .submit-btn:disabled {
-      background: #d2d2d7;
-      cursor: not-allowed;
-      box-shadow: none;
-    }
-
-    .status-table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
-      background: white;
-      border-radius: 18px;
-      overflow: hidden;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-    }
-
-    .status-table th,
-    .status-table td {
-      padding: 16px 20px;
-      text-align: center;
-      border-bottom: 1px solid #d2d2d7;
-    }
-
-    .status-table th {
-      background: #fbfbfd;
-      color: #1d1d1f;
-      font-weight: 600;
-      font-size: 15px;
-      letter-spacing: -0.016em;
-    }
-
-    .status-table tbody tr:hover {
-      background: #f5f5f7;
-    }
-
-    .status-table tbody tr:last-child td {
-      border-bottom: none;
-    }
-
-    .not-submitted-cell {
-      color: #86868b;
-      font-style: italic;
-    }
-
-    .menu-badge {
-      display: inline-block;
-      padding: 6px 16px;
-      border-radius: 20px;
-      font-size: 15px;
-      font-weight: 500;
-    }
-
-    .menu-summary {
-      background: white;
-      padding: 48px 32px;
-      border-radius: 18px;
-      margin-top: 40px;
-      text-align: center;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-    }
-
-    .menu-summary h3 {
-      font-size: 21px;
-      margin-bottom: 24px;
-      color: #6e6e73;
-      font-weight: 500;
-    }
-
-    .summary-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      justify-content: center;
-    }
-
-    .summary-item {
-      background: #f5f5f7;
-      padding: 16px 24px;
-      border-radius: 14px;
-      min-width: 120px;
-    }
-
-    .summary-menu-name {
-      font-size: 15px;
-      color: #6e6e73;
-      margin-bottom: 4px;
-    }
-
-    .summary-count {
-      font-size: 28px;
-      font-weight: 600;
-      color: #1d1d1f;
-    }
-
-    .summary-members {
-      font-size: 13px;
-      color: #86868b;
-      margin-top: 4px;
-    }
-
-    .copy-btn {
-      background: #34c759;
-      color: white;
-      border: none;
-      padding: 12px 28px;
-      font-size: 15px;
-      font-weight: 600;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: all 0.3s;
-      margin-top: 24px;
-    }
-
-    .copy-btn:hover {
-      background: #2da84a;
-      transform: scale(1.02);
-    }
-
-    .loading-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(245, 245, 247, 0.95);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-      opacity: 1;
-      transition: opacity 0.3s ease;
-    }
-
-    .loading-overlay.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    .loading-spinner {
-      width: 50px;
-      height: 50px;
-      border: 4px solid #d2d2d7;
-      border-top: 4px solid #ff9500;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    .loading-text {
-      margin-left: 20px;
-      font-size: 17px;
-      color: #1d1d1f;
-      font-weight: 500;
-    }
-
-    .menu-card.skip {
-      border-style: dashed;
-      background: #fbfbfd;
-    }
-
-    .menu-card.skip.selected {
-      background: #86868b;
-      border-color: #86868b;
-      border-style: solid;
-    }
-
-    .naver-place-link {
-      display: inline-block;
-      margin-top: 16px;
-      padding: 10px 24px;
-      background: #03c75a;
-      color: white;
-      text-decoration: none;
-      border-radius: 12px;
-      font-size: 15px;
-      font-weight: 600;
-      transition: all 0.3s;
-    }
-
-    .naver-place-link:hover {
-      background: #02b350;
-      transform: scale(1.02);
-    }
-
-    @media (max-width: 600px) {
-      h1 {
-        font-size: 36px;
-      }
-
-      .subtitle {
-        font-size: 17px;
-        margin-bottom: 40px;
-      }
-
-      .section h2 {
-        font-size: 24px;
-        margin-bottom: 20px;
-      }
-
-      .menu-grid {
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      }
-
-      .restaurant-banner .restaurant-name {
-        font-size: 22px;
-      }
-
-      .meeting-info .date-value {
-        font-size: 18px;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Study Crew · 오늘의 점심</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ---------- design tokens ---------- */
+  :root {
+    --ink: #1d1d1f;
+    --ink-2: #424245;
+    --muted: #6e6e73;
+    --muted-2: #86868b;
+    --hair: #e8e8ed;
+    --line: #d2d2d7;
+    --bg: #fbfbfd;
+    --surface: #ffffff;
+    --alt: #f5f5f7;
+    --accent: #0071e3;
+    --accent-press: #006edb;
+    --ok: #0a8c3a;
+    --ok-soft: #ecf7ee;
+    --warn-soft: #fff4e5;
+    --mc: #b71c1c;    /* quieter McDonald's red */
+    --ss: #1f6b45;    /* quieter Ssamai green */
+    --font: 'Pretendard', 'Inter', 'Inter Tight', -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+    --font-d: 'Inter Tight', 'Pretendard', -apple-system, sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { background: var(--bg); color: var(--ink); }
+  body {
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.5;
+    padding: 0 0 120px;
+  }
+
+  /* ---------- top bar ---------- */
+  .topbar {
+    position: sticky; top: 0; z-index: 40;
+    background: rgba(251, 251, 253, 0.82);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid var(--hair);
+    padding: 14px 28px;
+    display: flex; align-items: center; gap: 18px;
+    font-size: 14px;
+  }
+  .topbar .brand {
+    font-family: var(--font-d);
+    font-weight: 600; font-size: 17px; letter-spacing: -0.4px;
+  }
+  .topbar .brand span { color: var(--accent); }
+  .topbar .crumbs { color: var(--muted); font-size: 13px; }
+  .topbar .crumbs b { color: var(--ink); font-weight: 500; }
+  .topbar .spacer { flex: 1; }
+  .topbar .counter {
+    font-size: 12px; color: var(--muted);
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .topbar .counter em {
+    font-style: normal; color: var(--ink); font-weight: 600;
+    font-family: var(--font-d); font-size: 13px;
+  }
+  .counter-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--ok); box-shadow: 0 0 0 3px var(--ok-soft);
+  }
+
+  /* ---------- layout ---------- */
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 56px 28px 0; }
+
+  /* ---------- hero ---------- */
+  .hero { display: grid; grid-template-columns: 1.1fr 1fr; gap: 56px; align-items: end; margin-bottom: 56px; }
+  .hero .eyebrow {
+    font-size: 12px; font-weight: 600; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 14px;
+  }
+  .hero h1 {
+    font-family: var(--font-d);
+    font-size: 64px; line-height: 1.04; letter-spacing: -1.2px;
+    font-weight: 600; margin-bottom: 18px; text-wrap: balance;
+  }
+  .hero .sub {
+    font-size: 19px; color: var(--muted); line-height: 1.55; max-width: 460px;
+  }
+  .hero-meta {
+    background: var(--surface);
+    border: 1px solid var(--hair);
+    border-radius: 20px;
+    padding: 22px 24px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .meta-row { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; }
+  .meta-label {
+    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--muted); font-weight: 600;
+  }
+  .meta-val { font-size: 15px; font-weight: 500; color: var(--ink); }
+  .meta-val.date { font-family: var(--font-d); font-size: 17px; letter-spacing: -0.2px; }
+  .meta-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; padding: 3px 10px; border-radius: 999px;
+    background: var(--ok-soft); color: var(--ok); font-weight: 600;
+  }
+  .meta-chip.off { background: var(--alt); color: var(--muted); }
+  .meta-chip .pulse {
+    width: 6px; height: 6px; border-radius: 50%; background: currentColor;
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse { 50% { opacity: 0.4; } }
+
+  /* ---------- restaurant switcher (replaces gradient banner) ---------- */
+  .restaurant {
+    background: var(--surface);
+    border: 1px solid var(--hair);
+    border-radius: 24px;
+    padding: 4px;
+    display: flex; gap: 4px; margin-bottom: 72px;
+  }
+  .resto-btn {
+    flex: 1; background: transparent; border: 0; cursor: pointer;
+    padding: 22px 28px; border-radius: 20px;
+    font-family: var(--font); color: var(--muted-2);
+    text-align: left;
+    display: flex; align-items: center; gap: 18px;
+    transition: background 180ms cubic-bezier(0.4,0,0.2,1), color 180ms;
+  }
+  .resto-btn:hover { background: var(--alt); color: var(--ink); }
+  .resto-btn.active { background: var(--ink); color: #fff; }
+  .resto-btn.active.mc { background: var(--mc); }
+  .resto-btn.active.ss { background: var(--ss); }
+  .resto-icon {
+    width: 44px; height: 44px; border-radius: 14px;
+    background: var(--alt);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+  }
+  .resto-btn.active .resto-icon { background: rgba(255,255,255,0.16); }
+  .resto-btn .nm { font-weight: 600; font-size: 16px; letter-spacing: -0.2px; line-height: 1.25; }
+  .resto-btn .sub {
+    font-size: 12px; opacity: 0.7; margin-top: 3px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .resto-btn.active .sub { opacity: 0.78; }
+
+  /* ---------- section header ---------- */
+  .section { margin-bottom: 64px; }
+  .s-head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 22px; }
+  .s-step {
+    font-family: var(--font-d);
+    width: 26px; height: 26px; border-radius: 8px;
+    background: var(--ink); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600;
+  }
+  .s-head h2 {
+    font-family: var(--font-d);
+    font-size: 28px; font-weight: 600; letter-spacing: -0.4px;
+  }
+  .s-head .note { color: var(--muted); font-size: 13px; margin-left: auto; }
+
+  /* ---------- members ---------- */
+  .members { display: grid; grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); gap: 10px; }
+  .m-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px 14px;
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    cursor: pointer;
+    transition: border-color 160ms, background 160ms, transform 160ms cubic-bezier(0.4,0,0.2,1);
+  }
+  .m-card:hover { border-color: var(--muted-2); transform: translateY(-1px); }
+  .m-card.selected {
+    background: var(--ink); border-color: var(--ink); color: #fff;
+  }
+  .m-card.submitted {
+    background: var(--ok-soft); border-color: #c7e7d1;
+  }
+  .m-card.submitted::after {
+    content: ''; width: 16px; height: 16px; border-radius: 50%;
+    background: var(--ok);
+    -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M20 6 9 17l-5-5' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/></svg>") center/14px no-repeat;
+            mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M20 6 9 17l-5-5' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/></svg>") center/14px no-repeat;
+    flex-shrink: 0;
+  }
+  .m-card.selected.submitted::after { background: #fff; }
+  .m-name { font-size: 15px; font-weight: 500; letter-spacing: -0.2px; }
+
+  /* ---------- menu ---------- */
+  .menu-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .menu-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 20px 20px 18px;
+    cursor: pointer;
+    display: flex; flex-direction: column; justify-content: space-between;
+    min-height: 100px;
+    transition: border-color 160ms, background 160ms, transform 160ms cubic-bezier(0.4,0,0.2,1);
+  }
+  .menu-card:hover { border-color: var(--muted-2); transform: translateY(-1px); }
+  .menu-card.selected {
+    border-color: var(--accent); background: #f0f7ff;
+    box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.14);
+  }
+  .menu-card.skip {
+    border-style: dashed; background: transparent;
+  }
+  .menu-card.skip.selected {
+    background: var(--alt); border-color: var(--muted-2); border-style: solid;
+    box-shadow: none;
+  }
+  .menu-nm {
+    font-size: 15px; font-weight: 600; color: var(--ink);
+    letter-spacing: -0.2px; line-height: 1.35;
+  }
+  .menu-px {
+    font-family: var(--font-d);
+    font-size: 14px; color: var(--muted); margin-top: 6px;
+    font-weight: 500;
+  }
+  .menu-card.selected .menu-px { color: var(--accent); }
+
+  .menu-row { grid-column: 1 / -1; display: flex; justify-content: flex-end; margin-top: 4px; }
+  .naver-link {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: transparent; color: var(--muted); text-decoration: none;
+    font-size: 13px; font-weight: 500; padding: 8px 14px; border-radius: 999px;
+    border: 1px solid var(--line);
+    transition: color 160ms, border-color 160ms, background 160ms;
+  }
+  .naver-link:hover { color: var(--ink); border-color: var(--muted-2); background: var(--surface); }
+  .naver-link svg { width: 14px; height: 14px; }
+
+  /* ---------- custom input ---------- */
+  .custom-in {
+    margin-top: 14px; display: none;
+  }
+  .custom-in.visible { display: block; }
+  .custom-in input {
+    width: 100%; padding: 14px 18px;
+    border: 1px solid var(--muted-2); border-radius: 12px;
+    font-size: 16px; font-family: inherit; background: var(--surface);
+    transition: border-color 160ms, box-shadow 160ms;
+  }
+  .custom-in input:focus {
+    outline: none; border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(0,113,227,0.16);
+  }
+
+  /* ---------- submit dock (sticky bottom) ---------- */
+  .dock {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+    background: rgba(255,255,255,0.88);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-top: 1px solid var(--hair);
+    padding: 14px 28px;
+  }
+  .dock-inner {
+    max-width: 1120px; margin: 0 auto;
+    display: flex; align-items: center; gap: 20px;
+  }
+  .dock-status {
+    font-size: 13px; color: var(--muted); line-height: 1.4;
+  }
+  .dock-status b { color: var(--ink); font-weight: 600; }
+  .dock .spacer { flex: 1; }
+  .submit-btn {
+    background: var(--accent); color: #fff;
+    border: 0; border-radius: 980px;
+    padding: 14px 34px;
+    font-family: inherit; font-size: 15px; font-weight: 500;
+    cursor: pointer;
+    transition: background 160ms, transform 160ms cubic-bezier(0.4,0,0.2,1);
+  }
+  .submit-btn:hover:not(:disabled) { background: #0077ed; }
+  .submit-btn:active:not(:disabled) { background: var(--accent-press); transform: scale(0.98); }
+  .submit-btn:disabled { background: var(--line); color: var(--muted); cursor: not-allowed; }
+  .submit-btn.done { background: var(--ok); }
+
+  /* ---------- status / summary panel ---------- */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--hair);
+    border-radius: 24px; overflow: hidden;
+  }
+  .panel-head {
+    padding: 22px 28px;
+    display: flex; align-items: baseline; justify-content: space-between;
+    border-bottom: 1px solid var(--hair);
+  }
+  .panel-head h3 {
+    font-family: var(--font-d);
+    font-size: 20px; font-weight: 600; letter-spacing: -0.2px;
+  }
+  .panel-head .n {
+    font-size: 13px; color: var(--muted);
+  }
+  .panel-head .n b {
+    font-family: var(--font-d); color: var(--ink);
+    font-weight: 600; font-size: 15px; letter-spacing: -0.2px;
+  }
+
+  .panel-body { padding: 8px 0; }
+
+  .row {
+    display: grid; grid-template-columns: 180px 1fr auto;
+    padding: 14px 28px; align-items: center;
+    border-bottom: 1px solid var(--hair);
+    gap: 18px;
+  }
+  .row:last-child { border-bottom: 0; }
+  .row .name { font-weight: 500; font-size: 15px; letter-spacing: -0.2px; }
+  .row .pick { font-size: 14px; color: var(--ink); }
+  .row .pick.muted { color: var(--muted-2); font-style: italic; }
+  .row .badge {
+    display: inline-block; padding: 4px 12px; border-radius: 999px;
+    background: var(--alt); color: var(--ink-2);
+    font-size: 13px; font-weight: 500;
+  }
+  .row .time {
+    font-family: var(--font-d);
+    font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- summary ---------- */
+  .summary-panel {
+    margin-top: 20px;
+    background: var(--surface);
+    border: 1px solid var(--hair);
+    border-radius: 24px;
+    padding: 28px;
+  }
+  .summary-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 20px; gap: 16px; }
+  .summary-head h3 {
+    font-family: var(--font-d);
+    font-size: 20px; font-weight: 600; letter-spacing: -0.2px;
+  }
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+  .summary-item {
+    background: var(--alt);
+    border-radius: 16px;
+    padding: 18px 20px;
+  }
+  .summary-item .nm { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  .summary-item .ct {
+    font-family: var(--font-d);
+    font-size: 28px; font-weight: 600; letter-spacing: -0.6px; line-height: 1;
+  }
+  .summary-item .ct span {
+    font-size: 14px; font-weight: 500; color: var(--muted); margin-left: 2px;
+  }
+  .summary-item .mb {
+    font-size: 12px; color: var(--muted-2); margin-top: 8px; line-height: 1.4;
+  }
+  .summary-empty {
+    color: var(--muted); font-size: 14px; padding: 12px 4px;
+  }
+  .copy-btn {
+    background: transparent; color: var(--accent); border: 0;
+    padding: 8px 0; font-family: inherit; font-size: 14px;
+    font-weight: 500; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .copy-btn:hover { text-decoration: underline; text-underline-offset: 2px; }
+  .copy-btn svg { width: 14px; height: 14px; }
+
+  /* ---------- loading ---------- */
+  .loading {
+    position: fixed; inset: 0; z-index: 999;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+    opacity: 1; transition: opacity 280ms;
+  }
+  .loading.hidden { opacity: 0; pointer-events: none; }
+  .loading .spin {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 2px solid var(--hair); border-top-color: var(--ink);
+    animation: spin 0.8s linear infinite;
+  }
+  .loading .txt { font-size: 14px; color: var(--muted); letter-spacing: -0.2px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---------- mobile ---------- */
+  @media (max-width: 800px) {
+    .wrap { padding: 32px 20px 0; }
+    .hero { grid-template-columns: 1fr; gap: 28px; margin-bottom: 40px; }
+    .hero h1 { font-size: 40px; letter-spacing: -0.6px; }
+    .hero .sub { font-size: 16px; }
+    .restaurant { flex-direction: column; margin-bottom: 48px; }
+    .resto-btn { padding: 16px 18px; }
+    .menu-grid { grid-template-columns: 1fr 1fr; }
+    .row { grid-template-columns: 100px 1fr auto; padding: 12px 18px; gap: 10px; }
+    .panel-head { padding: 18px 20px; }
+    .s-head h2 { font-size: 22px; }
+    .s-head .note { display: none; }
+    .dock { padding: 12px 16px; }
+    .dock-status { font-size: 12px; }
+    .submit-btn { padding: 12px 22px; font-size: 14px; }
+  }
+</style>
 </head>
 <body>
-  <div id="loadingOverlay" class="loading-overlay">
-    <div class="loading-spinner"></div>
-    <div class="loading-text">데이터 불러오는 중...</div>
+
+<div id="loadingOverlay" class="loading">
+  <div class="spin"></div>
+  <div class="txt">데이터 불러오는 중</div>
+</div>
+
+<header class="topbar">
+  <div class="brand">AI Study <span>Crew</span></div>
+  <div class="crumbs">점심 메뉴 · <b id="topDate">오늘</b></div>
+  <div class="spacer"></div>
+  <div class="counter">
+    <span class="counter-dot"></span>
+    <span id="topCounter"><em>0</em> / <em>0</em> 선택 완료</span>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="hero">
+    <div>
+      <div class="eyebrow">TODAY'S LUNCH</div>
+      <h1>오늘은 뭐 먹을까.</h1>
+      <p class="sub">본인을 선택하고, 메뉴 하나를 고르면 끝. 모임일 기준으로 모두의 선택이 실시간으로 모입니다.</p>
+    </div>
+    <div class="hero-meta">
+      <div class="meta-row">
+        <div>
+          <div class="meta-label">모임일</div>
+          <div class="meta-val date" id="meetingDateDisplay">—</div>
+        </div>
+        <div class="meta-chip" id="meetingChip">
+          <span class="pulse"></span><span id="meetingChipText">모임일</span>
+        </div>
+      </div>
+      <div style="border-top: 1px solid var(--hair);"></div>
+      <div class="meta-row">
+        <div>
+          <div class="meta-label">식당</div>
+          <div class="meta-val" id="restaurantName">—</div>
+        </div>
+        <div style="font-size: 12px; color: var(--muted);">아래에서 변경할 수 있어요</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="restaurant" role="tablist">
+    <button class="resto-btn active mc" id="btnMcdonalds" onclick="switchRestaurant('mcdonalds')">
+      <div class="resto-icon">🍔</div>
+      <div>
+        <div class="nm">맥도날드</div>
+        <div class="sub">울산옥현점 · 버거 세트</div>
+      </div>
+    </button>
+    <button class="resto-btn ss" id="btnSsamai" onclick="switchRestaurant('ssamai')">
+      <div class="resto-icon">🍚</div>
+      <div>
+        <div class="nm">쌈마이닭쌈밥</div>
+        <div class="sub">무거점 · 백반 도시락</div>
+      </div>
+    </button>
   </div>
 
-  <div class="container">
-    <h1>AI Study Crew</h1>
-    <p class="subtitle">오늘의 점심 메뉴를 선택해주세요</p>
-
-    <div class="restaurant-banner" id="restaurantBanner">
-      <div class="restaurant-icon" id="restaurantIcon"></div>
-      <div class="restaurant-label">오늘의 식당</div>
-      <div class="restaurant-name" id="restaurantName">불러오는 중...</div>
-      <div class="restaurant-toggle">
-        <button class="restaurant-toggle-btn active" id="btnMcdonalds" onclick="switchRestaurant('mcdonalds')">🍔 맥도날드</button>
-        <button class="restaurant-toggle-btn" id="btnSsamai" onclick="switchRestaurant('ssamai')">🍚 쌈마이닭쌈밥</button>
-      </div>
+  <section class="section">
+    <div class="s-head">
+      <span class="s-step">1</span>
+      <h2>본인을 선택해주세요</h2>
+      <span class="note">선택하면 메뉴 단계로 이동합니다</span>
     </div>
+    <div class="members" id="membersList"></div>
+  </section>
 
-    <div class="meeting-info" id="meetingInfo">
-      <div class="date-label" id="dateLabel">오늘 모임일</div>
-      <div class="date-value" id="meetingDateDisplay">불러오는 중...</div>
+  <section class="section">
+    <div class="s-head">
+      <span class="s-step">2</span>
+      <h2>메뉴를 선택해주세요</h2>
+      <span class="note" id="menuNote">식당에 따라 메뉴가 바뀝니다</span>
     </div>
-
-    <div id="mainContent">
-      <div class="section">
-        <h2>본인을 선택해주세요</h2>
-        <div class="members-list" id="membersList"></div>
-      </div>
-
-      <div class="section">
-        <h2>메뉴를 선택해주세요</h2>
-        <div class="menu-grid" id="menuGrid"></div>
-        <div class="custom-input-container" id="customInputContainer">
-          <input type="text" class="custom-input" id="customMenuInput" placeholder="원하는 메뉴를 입력해주세요" />
-        </div>
-      </div>
-
-      <div class="submit-section">
-        <button class="submit-btn" id="submitBtn" onclick="submitSelection()" disabled>선택 완료</button>
-      </div>
-
-      <div class="section">
-        <h2>선택 현황</h2>
-        <div id="statusTableContainer"></div>
-      </div>
-
-      <div id="summaryBox"></div>
+    <div class="menu-grid" id="menuGrid"></div>
+    <div class="custom-in" id="customInputContainer">
+      <input type="text" id="customMenuInput" placeholder="원하는 메뉴를 입력해주세요" />
     </div>
+  </section>
+
+  <section class="section">
+    <div class="s-head">
+      <span class="s-step">3</span>
+      <h2>선택 현황</h2>
+      <span class="note">10초마다 자동 갱신</span>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <h3>멤버별 선택</h3>
+        <div class="n"><b id="panelCount">0</b> <span id="panelTotal">/ 0명</span></div>
+      </div>
+      <div class="panel-body" id="statusTableContainer"></div>
+    </div>
+    <div id="summaryBox"></div>
+  </section>
+
+</main>
+
+<div class="dock">
+  <div class="dock-inner">
+    <div class="dock-status" id="dockStatus">본인과 메뉴를 선택해주세요</div>
+    <div class="spacer"></div>
+    <button class="submit-btn" id="submitBtn" onclick="submitSelection()" disabled>선택 완료</button>
   </div>
+</div>
 
-  <script>
-    // ===== 설정 =====
-    const STUDY_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz2CCEL-5_-BHuSrVxEzSyQGmoFEfXyPGniQ_spVDmeBmtxoBajTboZuo_xK9ngyHIv7A/exec';
-    const LUNCH_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyEErpXKVNuL3X4WWj5P3yfGIWyj8Px0oZgTtIzuKGIOcnoe3TpfBfW2Y-ScmuPrhZL/exec';
+<script>
+  // ===== 설정 =====
+  const STUDY_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz2CCEL-5_-BHuSrVxEzSyQGmoFEfXyPGniQ_spVDmeBmtxoBajTboZuo_xK9ngyHIv7A/exec';
+  const LUNCH_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyEErpXKVNuL3X4WWj5P3yfGIWyj8Px0oZgTtIzuKGIOcnoe3TpfBfW2Y-ScmuPrhZL/exec';
 
-    // ===== 식당 & 메뉴 데이터 =====
-    const RESTAURANTS = {
-      mcdonalds: {
-        name: '맥도날드 울산옥현점',
-        icon: '\uD83C\uDF54',
-        bannerClass: 'mcdonalds',
-        naverPlaceUrl: 'https://map.naver.com/p/search/%EB%A7%A5%EB%8F%84%EB%82%A0%EB%93%9C%20%EC%9A%B8%EC%82%B0%EB%8C%80%ED%95%99/place/11807389?placePath=/menu',
-        menus: [
-          { id: 'bigmac', name: '빅맥 세트', price: '9,000원' },
-          { id: 'shanghai', name: '맥스파이시 상하이버거 세트', price: '9,100원' },
-          { id: '1955', name: '1955 버거 세트', price: '9,800원' },
-          { id: 'bulgogi', name: '불고기버거 세트', price: '6,900원' },
-          { id: 'double_bulgogi', name: '더블 불고기버거 세트', price: '8,200원' },
-          { id: 'shushu', name: '슈슈버거 세트', price: '7,400원' },
-          { id: 'mcchicken', name: '맥치킨 세트', price: '7,000원' },
-          { id: 'mcchicken_mozz', name: '맥치킨 모짜렐라 세트', price: '8,700원' }
-        ]
-      },
-      ssamai: {
-        name: '쌈마이닭쌈밥 무거점',
-        icon: '\uD83C\uDF5A',
-        bannerClass: 'ssamai',
-        naverPlaceUrl: 'https://map.naver.com/p/entry/place/1220681461?placePath=/menu',
-        menus: [
-          { id: 'roast', name: '쌈마이 닭쌈밥 백반도시락', price: '8,900원' },
-          { id: 'yangnyeom', name: '양념 닭쌈밥 백반도시락', price: '9,500원' },
-          { id: 'fire', name: '핵불닭쌈밥 백반도시락', price: '9,500원' },
-          { id: 'garlic', name: '마늘닭쌈밥 백반도시락', price: '9,500원' },
-          { id: 'gobabi', name: '고바비 백반도시락 (2인분)', price: '18,500원' }
-        ]
-      }
-    };
-
-    // ===== 상태 =====
-    let allMembers = [];
-    let selectedMember = null;
-    let selectedMenu = null;
-    let lunchData = {};
-    let meetingDate = null;
-    let todayRestaurantKey = null;
-    let todayRestaurant = null;
-
-    // ===== 식당 선택 (기본: 맥도날드) =====
-    function selectTodayRestaurant() {
-      todayRestaurantKey = 'mcdonalds';
-      todayRestaurant = RESTAURANTS[todayRestaurantKey];
-      return todayRestaurant;
+  const RESTAURANTS = {
+    mcdonalds: {
+      name: '맥도날드 울산옥현점',
+      icon: '🍔',
+      key: 'mc',
+      naverPlaceUrl: 'https://map.naver.com/p/search/%EB%A7%A5%EB%8F%84%EB%82%A0%EB%93%9C%20%EC%9A%B8%EC%82%B0%EB%8C%80%ED%95%99/place/11807389?placePath=/menu',
+      menus: [
+        { id: 'bigmac', name: '빅맥 세트', price: '9,000원' },
+        { id: 'shanghai', name: '맥스파이시 상하이버거 세트', price: '9,100원' },
+        { id: '1955', name: '1955 버거 세트', price: '9,800원' },
+        { id: 'bulgogi', name: '불고기버거 세트', price: '6,900원' },
+        { id: 'double_bulgogi', name: '더블 불고기버거 세트', price: '8,200원' },
+        { id: 'shushu', name: '슈슈버거 세트', price: '7,400원' },
+        { id: 'mcchicken', name: '맥치킨 세트', price: '7,000원' },
+        { id: 'mcchicken_mozz', name: '맥치킨 모짜렐라 세트', price: '8,700원' }
+      ]
+    },
+    ssamai: {
+      name: '쌈마이닭쌈밥 무거점',
+      icon: '🍚',
+      key: 'ss',
+      naverPlaceUrl: 'https://map.naver.com/p/entry/place/1220681461?placePath=/menu',
+      menus: [
+        { id: 'roast', name: '쌈마이 닭쌈밥 백반도시락', price: '8,900원' },
+        { id: 'yangnyeom', name: '양념 닭쌈밥 백반도시락', price: '9,500원' },
+        { id: 'fire', name: '핵불닭쌈밥 백반도시락', price: '9,500원' },
+        { id: 'garlic', name: '마늘닭쌈밥 백반도시락', price: '9,500원' },
+        { id: 'gobabi', name: '고바비 백반도시락 (2인분)', price: '18,500원' }
+      ]
     }
+  };
 
-    function switchRestaurant(key) {
-      todayRestaurantKey = key;
-      todayRestaurant = RESTAURANTS[key];
+  // ===== 상태 =====
+  let allMembers = [];
+  let selectedMember = null;
+  let selectedMenu = null;
+  let lunchData = {};
+  let meetingDate = null;
+  let todayRestaurantKey = 'mcdonalds';
+  let todayRestaurant = RESTAURANTS.mcdonalds;
 
-      // 메뉴 선택 초기화
-      selectedMenu = null;
+  function switchRestaurant(key) {
+    todayRestaurantKey = key;
+    todayRestaurant = RESTAURANTS[key];
+    selectedMenu = null;
+    renderRestaurantMeta();
+    renderMenuGrid();
+    updateSubmitButton();
+    document.getElementById('btnMcdonalds').classList.toggle('active', key === 'mcdonalds');
+    document.getElementById('btnSsamai').classList.toggle('active', key === 'ssamai');
+  }
 
-      renderRestaurantBanner();
-      renderMenuGrid();
-      updateSubmitButton();
-      updateToggleButtons();
-    }
-
-    function updateToggleButtons() {
-      document.getElementById('btnMcdonalds').classList.toggle('active', todayRestaurantKey === 'mcdonalds');
-      document.getElementById('btnSsamai').classList.toggle('active', todayRestaurantKey === 'ssamai');
-    }
-
-    // ===== 유틸리티 함수 =====
-    function getISOWeekString(date) {
-      const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-      const dayNum = d.getUTCDay() || 7;
-      d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-      const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-      const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-      const year = d.getUTCFullYear();
-      return year + '-W' + (weekNo < 10 ? '0' : '') + weekNo;
-    }
-
-    function getCurrentWeekId() {
-      const today = new Date();
-      const currentDay = today.getDay();
-      const mon = new Date(today);
-      if (currentDay === 0) {
-        mon.setDate(today.getDate() - 6);
-      } else {
-        mon.setDate(today.getDate() + (1 - currentDay));
-      }
-      return getISOWeekString(mon);
-    }
-
-    function getThisWeekDates() {
-      const today = new Date();
-      const currentDay = today.getDay();
-      const targetDays = [
-        { day: 3, name: '수요일', key: 'wed' },
-        { day: 4, name: '목요일', key: 'thu' },
-        { day: 5, name: '금요일', key: 'fri' }
-      ];
-
-      return targetDays.map(target => {
-        const diff = target.day - currentDay;
-        const targetDate = new Date(today);
-        targetDate.setDate(today.getDate() + diff);
-        const month = targetDate.getMonth() + 1;
-        const day = targetDate.getDate();
-        return {
-          value: target.key,
-          display: `${month}월 ${day}일`,
-          dayName: target.name,
-          dateObj: targetDate
-        };
-      });
-    }
-
-    function getTodayKey() {
-      const dayMap = { 3: 'wed', 4: 'thu', 5: 'fri' };
-      return dayMap[new Date().getDay()] || null;
-    }
-
-    function formatDate(dayKey) {
-      const weekDates = getThisWeekDates();
-      const dateInfo = weekDates.find(d => d.value === dayKey);
-      if (dateInfo) return `${dateInfo.display} (${dateInfo.dayName})`;
-      return dayKey;
-    }
-
-    function getMenuDisplayName(menuChoice, customMenu) {
-      if (menuChoice === 'skip') return '미선택 (안 먹음)';
-      if (menuChoice === 'other' && customMenu) {
-        return customMenu;
-      }
-      if (todayRestaurant) {
-        const menu = todayRestaurant.menus.find(m => m.id === menuChoice);
-        if (menu) return menu.name;
-      }
-      // 다른 식당의 메뉴일 수도 있으므로 전체 검색
-      for (const key of Object.keys(RESTAURANTS)) {
-        const menu = RESTAURANTS[key].menus.find(m => m.id === menuChoice);
-        if (menu) return menu.name;
-      }
-      return menuChoice;
-    }
-
-    // ===== 데이터 로드 =====
-    function hideLoading() {
-      const overlay = document.getElementById('loadingOverlay');
-      if (overlay) {
-        overlay.classList.add('hidden');
-        setTimeout(() => { overlay.style.display = 'none'; }, 300);
-      }
-    }
-
-    async function checkTodayMeeting() {
-      const weekId = getCurrentWeekId();
-      const todayKey = getTodayKey();
-
-      if (!todayKey) {
-        return { isMeetingDay: false, todayKey: null };
-      }
-
-      try {
-        const response = await fetch(
-          STUDY_SCRIPT_URL + '?action=load&weekId=' + encodeURIComponent(weekId),
-          { cache: 'no-cache' }
-        );
-        const data = await response.json();
-
-        if (!data.success) {
-          return { isMeetingDay: false, todayKey: null };
-        }
-
-        if (data.members) allMembers = data.members;
-
-        const availability = data.availability || {};
-        const allDates = ['wed', 'thu', 'fri'];
-
-        let maxCount = 0;
-        let bestDates = [];
-
-        allDates.forEach(date => {
-          let count = 0;
-          allMembers.forEach(member => {
-            if (availability[date] && availability[date][member]) {
-              count++;
-            }
-          });
-          if (count > maxCount) {
-            maxCount = count;
-            bestDates = [date];
-          } else if (count === maxCount && count > 0) {
-            bestDates.push(date);
-          }
-        });
-
-        const isMeetingDay = bestDates.includes(todayKey);
-        return { isMeetingDay, todayKey, bestDates, maxCount };
-      } catch (error) {
-        console.error('스터디 일정 로드 실패:', error);
-        // API 접근 불가 시 기본 멤버 목록 사용
-        if (allMembers.length === 0) {
-          allMembers = ['김근아', '김동주', '나희진', '이상용', '이예진', '이용성', '조인주', '황성욱'];
-        }
-        return { isMeetingDay: true, todayKey, bestDates: [todayKey], maxCount: 0 };
-      }
-    }
-
-    async function loadLunchData() {
-      const weekId = getCurrentWeekId();
-      try {
-        const response = await fetch(
-          LUNCH_SCRIPT_URL + '?action=loadLunch&weekId=' + encodeURIComponent(weekId),
-          { cache: 'no-cache' }
-        );
-        const data = await response.json();
-        if (data.success) {
-          lunchData = data.lunchData || {};
-          if (data.members && data.members.length > 0) {
-            allMembers = data.members;
-          }
-        }
-      } catch (error) {
-        console.error('점심 데이터 로드 실패:', error);
-      }
-    }
-
-    async function saveLunchData() {
-      const weekId = getCurrentWeekId();
-      const customMenu = selectedMenu === 'other'
-        ? document.getElementById('customMenuInput').value.trim()
-        : '';
-
-      try {
-        const params = new URLSearchParams({
-          action: 'saveLunch',
-          weekId: weekId,
-          memberName: selectedMember,
-          menuChoice: selectedMenu,
-          customMenu: customMenu,
-          restaurant: todayRestaurantKey
-        });
-
-        const saveUrl = LUNCH_SCRIPT_URL + '?' + params.toString();
-        const response = await fetch(saveUrl, { cache: 'no-cache' });
-        const result = await response.json();
-
-        if (!result.success) {
-          console.error('저장 실패:', result.error);
-          alert('저장에 실패했습니다: ' + result.error);
-          return;
-        }
-
-        // 저장 성공 후 데이터 재로드
-        await loadLunchData();
-        renderMembers();
-        renderStatusTable();
-        renderSummary();
-      } catch (error) {
-        console.error('점심 메뉴 저장 실패:', error);
-        alert('저장 중 오류가 발생했습니다. 다시 시도해주세요.');
-      }
-    }
-
-    // ===== 렌더링 =====
-    function renderRestaurantBanner() {
-      const banner = document.getElementById('restaurantBanner');
-      const iconEl = document.getElementById('restaurantIcon');
-      const nameEl = document.getElementById('restaurantName');
-
-      banner.className = 'restaurant-banner ' + todayRestaurant.bannerClass;
-      iconEl.textContent = todayRestaurant.icon;
-      nameEl.textContent = todayRestaurant.name;
-    }
-
-    function renderMembers() {
-      const container = document.getElementById('membersList');
-      container.innerHTML = allMembers.map(member => {
-        const isSelected = selectedMember === member;
-        const hasSubmitted = lunchData[member];
-        let classes = 'member-card';
-        if (isSelected) classes += ' selected';
-        else if (hasSubmitted) classes += ' submitted';
-
-        return `
-          <div class="${classes}" onclick="selectMember('${member}')">
-            <span class="member-name">${member}</span>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function renderMenuGrid() {
-      const container = document.getElementById('menuGrid');
-      const menus = [
-        ...todayRestaurant.menus,
-        { id: 'other', name: '기타 (직접 입력)' },
-        { id: 'skip', name: '미선택 (안 먹음)', isSkip: true }
-      ];
-
-      container.innerHTML = menus.map(menu => {
-        const isSelected = selectedMenu === menu.id;
-        const skipClass = menu.isSkip ? ' skip' : '';
-        return `
-          <div class="menu-card${skipClass} ${isSelected ? 'selected' : ''}" onclick="selectMenu('${menu.id}')">
-            <div class="menu-name">${menu.name}</div>
-            ${menu.price ? `<div class="menu-price">${menu.price}</div>` : ''}
-          </div>
-        `;
-      }).join('');
-
-      // 네이버 플레이스 링크
-      container.innerHTML += `
-        <div style="grid-column: 1 / -1; text-align: center; margin-top: 8px;">
-          <a href="${todayRestaurant.naverPlaceUrl}" target="_blank" class="naver-place-link">
-            📍 네이버 플레이스에서 전체 메뉴 보기
-          </a>
-        </div>
-      `;
-
-      const customContainer = document.getElementById('customInputContainer');
-      if (selectedMenu === 'other') {
-        customContainer.classList.add('visible');
-      } else {
-        customContainer.classList.remove('visible');
-      }
-    }
-
-    function renderStatusTable() {
-      const container = document.getElementById('statusTableContainer');
-
-      let html = '<table class="status-table">';
-      html += '<thead><tr><th>멤버</th><th>선택 메뉴</th><th>시간</th></tr></thead>';
-      html += '<tbody>';
-
-      allMembers.forEach(member => {
-        const data = lunchData[member];
-        if (data) {
-          const menuDisplay = getMenuDisplayName(data.menuChoice, data.customMenu);
-          const time = data.timestamp ? new Date(data.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
-          html += `<tr>
-            <td><strong>${member}</strong></td>
-            <td><span class="menu-badge">${menuDisplay}</span></td>
-            <td>${time}</td>
-          </tr>`;
-        } else {
-          html += `<tr>
-            <td><strong>${member}</strong></td>
-            <td colspan="2" class="not-submitted-cell">미선택</td>
-          </tr>`;
-        }
-      });
-
-      html += '</tbody></table>';
-      container.innerHTML = html;
-    }
-
-    function renderSummary() {
-      const container = document.getElementById('summaryBox');
-      const menuCounts = {};
-
-      Object.values(lunchData).forEach(data => {
-        const displayName = getMenuDisplayName(data.menuChoice, data.customMenu);
-        if (!menuCounts[displayName]) {
-          menuCounts[displayName] = { count: 0, members: [] };
-        }
-        menuCounts[displayName].count++;
-      });
-
-      Object.entries(lunchData).forEach(([member, data]) => {
-        const displayName = getMenuDisplayName(data.menuChoice, data.customMenu);
-        if (menuCounts[displayName]) {
-          menuCounts[displayName].members.push(member);
-        }
-      });
-
-      const totalSubmitted = Object.keys(lunchData).length;
-
-      if (totalSubmitted === 0) {
-        container.innerHTML = `
-          <div class="menu-summary">
-            <h3>아직 메뉴를 선택한 멤버가 없습니다</h3>
-          </div>
-        `;
-        return;
-      }
-
-      const summaryItems = Object.entries(menuCounts)
-        .sort((a, b) => b[1].count - a[1].count)
-        .map(([menu, info]) => `
-          <div class="summary-item">
-            <div class="summary-menu-name">${menu}</div>
-            <div class="summary-count">${info.count}명</div>
-            <div class="summary-members">${info.members.join(', ')}</div>
-          </div>
-        `).join('');
-
-      container.innerHTML = `
-        <div class="menu-summary">
-          <h3>메뉴 선택 현황 (${totalSubmitted}명 / ${allMembers.length}명)</h3>
-          <div class="summary-grid">${summaryItems}</div>
-          <button class="copy-btn" onclick="copyToClipboard()">📋 현황 복사</button>
-        </div>
-      `;
-    }
-
-    // ===== 이벤트 핸들러 =====
-    function selectMember(name) {
-      selectedMember = name;
-
-      if (lunchData[name]) {
-        selectedMenu = lunchData[name].menuChoice;
-        if (selectedMenu === 'other') {
-          document.getElementById('customMenuInput').value = lunchData[name].customMenu || '';
-        }
-      } else {
-        selectedMenu = null;
-      }
-
-      renderMembers();
-      renderMenuGrid();
-      updateSubmitButton();
-    }
-
-    function selectMenu(menuId) {
-      if (!selectedMember) {
-        alert('먼저 본인을 선택해주세요.');
-        return;
-      }
-      selectedMenu = menuId;
-      renderMenuGrid();
-      updateSubmitButton();
-
-      if (menuId === 'other') {
-        setTimeout(() => document.getElementById('customMenuInput').focus(), 100);
-      }
-    }
-
-    function updateSubmitButton() {
-      const btn = document.getElementById('submitBtn');
-      if (selectedMember && selectedMenu) {
-        if (selectedMenu === 'other') {
-          const customVal = document.getElementById('customMenuInput').value.trim();
-          btn.disabled = !customVal;
-        } else {
-          btn.disabled = false;
-        }
-      } else {
-        btn.disabled = true;
-      }
-    }
-
-    async function submitSelection() {
-      if (!selectedMember || !selectedMenu) return;
-
-      if (selectedMenu === 'other') {
-        const customVal = document.getElementById('customMenuInput').value.trim();
-        if (!customVal) {
-          alert('메뉴를 입력해주세요.');
-          return;
-        }
-      }
-
-      // 즉시 버튼 피드백
-      const btn = document.getElementById('submitBtn');
-      const originalText = btn.textContent;
-      btn.textContent = '저장 중...';
-      btn.disabled = true;
-      btn.style.background = '#34c759';
-
-      const customMenu = selectedMenu === 'other'
-        ? document.getElementById('customMenuInput').value.trim()
-        : '';
-
-      lunchData[selectedMember] = {
-        menuChoice: selectedMenu,
-        customMenu: customMenu,
-        timestamp: new Date().toISOString()
+  // ===== 유틸리티 =====
+  function getISOWeekString(date) {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    return d.getUTCFullYear() + '-W' + (weekNo < 10 ? '0' : '') + weekNo;
+  }
+  function getCurrentWeekId() {
+    const today = new Date();
+    const currentDay = today.getDay();
+    const mon = new Date(today);
+    if (currentDay === 0) mon.setDate(today.getDate() - 6);
+    else mon.setDate(today.getDate() + (1 - currentDay));
+    return getISOWeekString(mon);
+  }
+  function getThisWeekDates() {
+    const today = new Date();
+    const currentDay = today.getDay();
+    const targetDays = [
+      { day: 3, name: '수요일', key: 'wed' },
+      { day: 4, name: '목요일', key: 'thu' },
+      { day: 5, name: '금요일', key: 'fri' }
+    ];
+    return targetDays.map(target => {
+      const diff = target.day - currentDay;
+      const targetDate = new Date(today);
+      targetDate.setDate(today.getDate() + diff);
+      return {
+        value: target.key,
+        display: `${targetDate.getMonth() + 1}월 ${targetDate.getDate()}일`,
+        dayName: target.name,
+        dateObj: targetDate
       };
-
-      // 즉시 화면 갱신 (서버 응답 기다리지 않고)
-      const prevMember = selectedMember;
-      renderStatusTable();
-      renderSummary();
-
-      await saveLunchData();
-
-      selectedMember = null;
-      selectedMenu = null;
-
-      btn.textContent = '✓ 완료!';
-      btn.style.background = '#34c759';
-
-      renderMembers();
-      renderMenuGrid();
-      updateSubmitButton();
-
-      setTimeout(() => {
-        btn.textContent = originalText;
-        btn.style.background = '';
-      }, 1500);
+    });
+  }
+  function getTodayKey() {
+    const dayMap = { 3: 'wed', 4: 'thu', 5: 'fri' };
+    return dayMap[new Date().getDay()] || null;
+  }
+  function formatDate(dayKey) {
+    const d = getThisWeekDates().find(d => d.value === dayKey);
+    return d ? `${d.display} (${d.dayName})` : dayKey;
+  }
+  function getMenuDisplayName(menuChoice, customMenu) {
+    if (menuChoice === 'skip') return '미선택 (안 먹음)';
+    if (menuChoice === 'other' && customMenu) return customMenu;
+    if (todayRestaurant) {
+      const m = todayRestaurant.menus.find(x => x.id === menuChoice);
+      if (m) return m.name;
     }
-
-    async function copyToClipboard() {
-      const totalSubmitted = Object.keys(lunchData).length;
-      const menuGroups = {};
-
-      Object.entries(lunchData).forEach(([member, data]) => {
-        const displayName = getMenuDisplayName(data.menuChoice, data.customMenu);
-        if (!menuGroups[displayName]) menuGroups[displayName] = [];
-        menuGroups[displayName].push(member);
-      });
-
-      let text = `🍽️ AI Study Crew 점심 메뉴 현황\n`;
-      text += `🏪 ${todayRestaurant.icon} ${todayRestaurant.name}\n`;
-      text += `📅 ${meetingDate ? formatDate(meetingDate) : '오늘'}\n`;
-      text += `👥 ${totalSubmitted}명 / ${allMembers.length}명 선택 완료\n\n`;
-
-      Object.entries(menuGroups)
-        .sort((a, b) => b[1].length - a[1].length)
-        .forEach(([menu, members]) => {
-          text += `${menu}: ${members.join(', ')} (${members.length}명)\n`;
-        });
-
-      try {
-        await navigator.clipboard.writeText(text);
-        alert('현황이 클립보드에 복사되었습니다!');
-      } catch (error) {
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        textarea.style.position = 'fixed';
-        textarea.style.opacity = '0';
-        document.body.appendChild(textarea);
-        textarea.select();
-        try {
-          document.execCommand('copy');
-          alert('현황이 클립보드에 복사되었습니다!');
-        } catch (err) {
-          alert('클립보드 복사에 실패했습니다.');
-        }
-        document.body.removeChild(textarea);
-      }
+    for (const k of Object.keys(RESTAURANTS)) {
+      const m = RESTAURANTS[k].menus.find(x => x.id === menuChoice);
+      if (m) return m.name;
     }
+    return menuChoice;
+  }
 
-    // ===== 초기화 =====
-    async function init() {
-      document.getElementById('customMenuInput').addEventListener('input', updateSubmitButton);
-      document.getElementById('customMenuInput').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') submitSelection();
+  // ===== 데이터 =====
+  function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+      overlay.classList.add('hidden');
+      setTimeout(() => overlay.style.display = 'none', 300);
+    }
+  }
+  async function checkTodayMeeting() {
+    const weekId = getCurrentWeekId();
+    const todayKey = getTodayKey();
+    if (!todayKey) return { isMeetingDay: false, todayKey: null };
+    try {
+      const response = await fetch(STUDY_SCRIPT_URL + '?action=load&weekId=' + encodeURIComponent(weekId), { cache: 'no-cache' });
+      const data = await response.json();
+      if (!data.success) return { isMeetingDay: false, todayKey: null };
+      if (data.members) allMembers = data.members;
+      const availability = data.availability || {};
+      const allDates = ['wed', 'thu', 'fri'];
+      let maxCount = 0; let bestDates = [];
+      allDates.forEach(date => {
+        let count = 0;
+        allMembers.forEach(m => { if (availability[date] && availability[date][m]) count++; });
+        if (count > maxCount) { maxCount = count; bestDates = [date]; }
+        else if (count === maxCount && count > 0) bestDates.push(date);
       });
-
-      // 오늘의 식당 랜덤 선정
-      selectTodayRestaurant();
-      renderRestaurantBanner();
-
-      // 스터디 앱에서 모임 정보 로드
-      const result = await checkTodayMeeting();
-      meetingDate = result.todayKey;
-
-      const meetingInfoEl = document.getElementById('meetingInfo');
-      const dateLabelEl = document.getElementById('dateLabel');
-      const dateDisplayEl = document.getElementById('meetingDateDisplay');
-
-      if (result.isMeetingDay && result.todayKey) {
-        dateLabelEl.textContent = '오늘 모임일';
-        dateDisplayEl.textContent = formatDate(result.todayKey);
-      } else {
-        meetingInfoEl.classList.add('not-meeting-day');
-        dateLabelEl.textContent = '오늘은 모임일이 아닙니다';
-        const today = new Date();
-        dateDisplayEl.textContent = `${today.getMonth() + 1}월 ${today.getDate()}일`;
+      return { isMeetingDay: bestDates.includes(todayKey), todayKey, bestDates, maxCount };
+    } catch (error) {
+      console.error('스터디 일정 로드 실패:', error);
+      if (allMembers.length === 0) {
+        allMembers = ['김근아', '김동주', '나희진', '이상용', '이예진', '이용성', '조인주', '황성욱'];
       }
-
-      // 점심 데이터 로드
+      return { isMeetingDay: true, todayKey, bestDates: [todayKey], maxCount: 0 };
+    }
+  }
+  async function loadLunchData() {
+    const weekId = getCurrentWeekId();
+    try {
+      const response = await fetch(LUNCH_SCRIPT_URL + '?action=loadLunch&weekId=' + encodeURIComponent(weekId), { cache: 'no-cache' });
+      const data = await response.json();
+      if (data.success) {
+        lunchData = data.lunchData || {};
+        if (data.members && data.members.length > 0) allMembers = data.members;
+      }
+    } catch (error) { console.error('점심 데이터 로드 실패:', error); }
+  }
+  async function saveLunchData() {
+    const weekId = getCurrentWeekId();
+    const customMenu = selectedMenu === 'other' ? document.getElementById('customMenuInput').value.trim() : '';
+    try {
+      const params = new URLSearchParams({
+        action: 'saveLunch', weekId, memberName: selectedMember,
+        menuChoice: selectedMenu, customMenu, restaurant: todayRestaurantKey
+      });
+      const response = await fetch(LUNCH_SCRIPT_URL + '?' + params.toString(), { cache: 'no-cache' });
+      const result = await response.json();
+      if (!result.success) { alert('저장에 실패했습니다: ' + result.error); return; }
       await loadLunchData();
+      renderMembers(); renderStatusTable(); renderSummary(); updateCounters();
+    } catch (error) {
+      console.error('점심 메뉴 저장 실패:', error);
+      alert('저장 중 오류가 발생했습니다. 다시 시도해주세요.');
+    }
+  }
 
-      renderMembers();
-      renderMenuGrid();
-      renderStatusTable();
-      renderSummary();
-      hideLoading();
+  // ===== 렌더링 =====
+  function renderRestaurantMeta() {
+    document.getElementById('restaurantName').textContent = todayRestaurant.name;
+  }
 
-      // 10초마다 자동 갱신
-      setInterval(async () => {
-        await loadLunchData();
-        renderMembers();
-        renderStatusTable();
-        renderSummary();
-      }, 10000);
+  function renderMembers() {
+    const container = document.getElementById('membersList');
+    container.innerHTML = allMembers.map(member => {
+      const isSelected = selectedMember === member;
+      const hasSubmitted = !!lunchData[member];
+      let cls = 'm-card';
+      if (isSelected) cls += ' selected';
+      if (hasSubmitted) cls += ' submitted';
+      return `<div class="${cls}" onclick="selectMember('${member}')"><span class="m-name">${member}</span></div>`;
+    }).join('');
+  }
+
+  function renderMenuGrid() {
+    const container = document.getElementById('menuGrid');
+    const menus = [
+      ...todayRestaurant.menus,
+      { id: 'other', name: '기타 (직접 입력)' },
+      { id: 'skip', name: '미선택 (안 먹음)', isSkip: true }
+    ];
+    container.innerHTML = menus.map(menu => {
+      const isSelected = selectedMenu === menu.id;
+      const cls = 'menu-card' + (menu.isSkip ? ' skip' : '') + (isSelected ? ' selected' : '');
+      return `<div class="${cls}" onclick="selectMenu('${menu.id}')">
+        <div class="menu-nm">${menu.name}</div>
+        ${menu.price ? `<div class="menu-px">${menu.price}</div>` : ''}
+      </div>`;
+    }).join('') + `
+      <div class="menu-row">
+        <a href="${todayRestaurant.naverPlaceUrl}" target="_blank" class="naver-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2C20 17.5 12 22 12 22Z"/><circle cx="12" cy="10" r="3"/></svg>
+          네이버 플레이스에서 전체 메뉴 보기
+        </a>
+      </div>`;
+    document.getElementById('customInputContainer').classList.toggle('visible', selectedMenu === 'other');
+  }
+
+  function renderStatusTable() {
+    const container = document.getElementById('statusTableContainer');
+    container.innerHTML = allMembers.map(member => {
+      const data = lunchData[member];
+      if (data) {
+        const menuDisplay = getMenuDisplayName(data.menuChoice, data.customMenu);
+        const time = data.timestamp ? new Date(data.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
+        return `<div class="row">
+          <div class="name">${member}</div>
+          <div class="pick"><span class="badge">${menuDisplay}</span></div>
+          <div class="time">${time}</div>
+        </div>`;
+      }
+      return `<div class="row">
+        <div class="name">${member}</div>
+        <div class="pick muted">미선택</div>
+        <div class="time">—</div>
+      </div>`;
+    }).join('');
+  }
+
+  function renderSummary() {
+    const container = document.getElementById('summaryBox');
+    const counts = {};
+    Object.entries(lunchData).forEach(([member, data]) => {
+      const name = getMenuDisplayName(data.menuChoice, data.customMenu);
+      if (!counts[name]) counts[name] = { count: 0, members: [] };
+      counts[name].count++;
+      counts[name].members.push(member);
+    });
+    const total = Object.keys(lunchData).length;
+    if (total === 0) {
+      container.innerHTML = `<div class="summary-panel">
+        <div class="summary-head"><h3>메뉴 집계</h3></div>
+        <div class="summary-empty">아직 메뉴를 선택한 멤버가 없습니다.</div>
+      </div>`;
+      return;
+    }
+    const items = Object.entries(counts)
+      .sort((a, b) => b[1].count - a[1].count)
+      .map(([menu, info]) => `<div class="summary-item">
+        <div class="nm">${menu}</div>
+        <div class="ct">${info.count}<span>명</span></div>
+        <div class="mb">${info.members.join(', ')}</div>
+      </div>`).join('');
+    container.innerHTML = `<div class="summary-panel">
+      <div class="summary-head">
+        <h3>메뉴 집계 · ${total}명</h3>
+        <button class="copy-btn" onclick="copyToClipboard()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          현황 복사
+        </button>
+      </div>
+      <div class="summary-grid">${items}</div>
+    </div>`;
+  }
+
+  function updateCounters() {
+    const done = Object.keys(lunchData).length;
+    const total = allMembers.length;
+    document.getElementById('panelCount').textContent = done;
+    document.getElementById('panelTotal').textContent = `/ ${total}명`;
+    document.getElementById('topCounter').innerHTML = `<em>${done}</em> / <em>${total}</em> 선택 완료`;
+  }
+
+  function updateDock() {
+    const el = document.getElementById('dockStatus');
+    if (!selectedMember && !selectedMenu) el.textContent = '본인과 메뉴를 선택해주세요';
+    else if (!selectedMember) el.textContent = '먼저 본인을 선택해주세요';
+    else if (!selectedMenu) el.innerHTML = `<b>${selectedMember}</b> 님, 메뉴를 선택해주세요`;
+    else {
+      const nm = selectedMenu === 'other'
+        ? (document.getElementById('customMenuInput').value.trim() || '기타 입력')
+        : getMenuDisplayName(selectedMenu);
+      el.innerHTML = `<b>${selectedMember}</b> · ${nm}`;
+    }
+  }
+
+  // ===== 이벤트 =====
+  function selectMember(name) {
+    selectedMember = name;
+    if (lunchData[name]) {
+      selectedMenu = lunchData[name].menuChoice;
+      if (selectedMenu === 'other') document.getElementById('customMenuInput').value = lunchData[name].customMenu || '';
+    } else {
+      selectedMenu = null;
+    }
+    renderMembers(); renderMenuGrid(); updateSubmitButton();
+  }
+  function selectMenu(menuId) {
+    if (!selectedMember) { alert('먼저 본인을 선택해주세요.'); return; }
+    selectedMenu = menuId;
+    renderMenuGrid(); updateSubmitButton();
+    if (menuId === 'other') setTimeout(() => document.getElementById('customMenuInput').focus(), 100);
+  }
+  function updateSubmitButton() {
+    const btn = document.getElementById('submitBtn');
+    let ok = selectedMember && selectedMenu;
+    if (ok && selectedMenu === 'other') {
+      ok = !!document.getElementById('customMenuInput').value.trim();
+    }
+    btn.disabled = !ok;
+    btn.classList.remove('done');
+    btn.textContent = '선택 완료';
+    updateDock();
+  }
+
+  async function submitSelection() {
+    if (!selectedMember || !selectedMenu) return;
+    if (selectedMenu === 'other') {
+      const v = document.getElementById('customMenuInput').value.trim();
+      if (!v) { alert('메뉴를 입력해주세요.'); return; }
+    }
+    const btn = document.getElementById('submitBtn');
+    btn.textContent = '저장 중…'; btn.disabled = true;
+    const customMenu = selectedMenu === 'other' ? document.getElementById('customMenuInput').value.trim() : '';
+    lunchData[selectedMember] = { menuChoice: selectedMenu, customMenu, timestamp: new Date().toISOString() };
+    renderStatusTable(); renderSummary(); updateCounters();
+    await saveLunchData();
+    selectedMember = null; selectedMenu = null;
+    btn.textContent = '✓ 저장 완료'; btn.classList.add('done');
+    renderMembers(); renderMenuGrid();
+    setTimeout(() => { updateSubmitButton(); }, 1500);
+  }
+
+  async function copyToClipboard() {
+    const total = Object.keys(lunchData).length;
+    const groups = {};
+    Object.entries(lunchData).forEach(([m, d]) => {
+      const nm = getMenuDisplayName(d.menuChoice, d.customMenu);
+      if (!groups[nm]) groups[nm] = []; groups[nm].push(m);
+    });
+    let text = `🍽️ AI Study Crew 점심 메뉴 현황\n`;
+    text += `🏪 ${todayRestaurant.icon} ${todayRestaurant.name}\n`;
+    text += `📅 ${meetingDate ? formatDate(meetingDate) : '오늘'}\n`;
+    text += `👥 ${total}명 / ${allMembers.length}명 선택 완료\n\n`;
+    Object.entries(groups).sort((a, b) => b[1].length - a[1].length).forEach(([m, arr]) => {
+      text += `${m}: ${arr.join(', ')} (${arr.length}명)\n`;
+    });
+    try { await navigator.clipboard.writeText(text); alert('현황이 클립보드에 복사되었습니다!'); }
+    catch {
+      const ta = document.createElement('textarea'); ta.value = text;
+      ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); alert('현황이 클립보드에 복사되었습니다!'); }
+      catch { alert('클립보드 복사에 실패했습니다.'); }
+      document.body.removeChild(ta);
+    }
+  }
+
+  // ===== 초기화 =====
+  async function init() {
+    const inp = document.getElementById('customMenuInput');
+    inp.addEventListener('input', updateSubmitButton);
+    inp.addEventListener('keypress', e => { if (e.key === 'Enter') submitSelection(); });
+
+    renderRestaurantMeta();
+
+    const result = await checkTodayMeeting();
+    meetingDate = result.todayKey;
+
+    const chip = document.getElementById('meetingChip');
+    const chipText = document.getElementById('meetingChipText');
+    const dateDisp = document.getElementById('meetingDateDisplay');
+    const topDate = document.getElementById('topDate');
+
+    if (result.isMeetingDay && result.todayKey) {
+      dateDisp.textContent = formatDate(result.todayKey);
+      topDate.textContent = formatDate(result.todayKey);
+      chipText.textContent = '모임일';
+      chip.classList.remove('off');
+    } else {
+      const t = new Date();
+      dateDisp.textContent = `${t.getMonth() + 1}월 ${t.getDate()}일`;
+      topDate.textContent = `${t.getMonth() + 1}월 ${t.getDate()}일`;
+      chipText.textContent = '모임일 아님';
+      chip.classList.add('off');
     }
 
-    init();
-  </script>
+    await loadLunchData();
+    renderMembers(); renderMenuGrid(); renderStatusTable(); renderSummary();
+    updateCounters(); updateDock(); hideLoading();
+
+    setInterval(async () => {
+      await loadLunchData();
+      renderMembers(); renderStatusTable(); renderSummary(); updateCounters();
+    }, 10000);
+  }
+
+  init();
+</script>
 </body>
 </html>
