@@ -555,7 +555,9 @@
   };
 
   // ===== 상태 =====
-  let allMembers = [];
+  const DEFAULT_MEMBERS = ['김근아', '김동주', '나희진', '이상용', '이예진', '이용성', '조인주', '황성욱'];
+  // 서버 응답 전에도 화면을 그릴 수 있도록 기본값으로 시작한다.
+  let allMembers = DEFAULT_MEMBERS.slice();
   let selectedMember = null;
   let selectedMenu = null;
   let lunchData = {};
@@ -649,22 +651,20 @@
       const response = await fetch(STUDY_SCRIPT_URL + '?action=load&weekId=' + encodeURIComponent(weekId), { cache: 'no-cache' });
       const data = await response.json();
       if (!data.success) return { isMeetingDay: false, todayKey: null };
-      if (data.members) allMembers = data.members;
+      const studyMembers = (data.members && data.members.length > 0) ? data.members : allMembers;
       const availability = data.availability || {};
       const allDates = ['wed', 'thu', 'fri'];
       let maxCount = 0; let bestDates = [];
       allDates.forEach(date => {
         let count = 0;
-        allMembers.forEach(m => { if (availability[date] && availability[date][m]) count++; });
+        studyMembers.forEach(m => { if (availability[date] && availability[date][m]) count++; });
         if (count > maxCount) { maxCount = count; bestDates = [date]; }
         else if (count === maxCount && count > 0) bestDates.push(date);
       });
       return { isMeetingDay: bestDates.includes(todayKey), todayKey, bestDates, maxCount };
     } catch (error) {
       console.error('스터디 일정 로드 실패:', error);
-      if (allMembers.length === 0) {
-        allMembers = ['김근아', '김동주', '나희진', '이상용', '이예진', '이용성', '조인주', '황성욱'];
-      }
+      if (allMembers.length === 0) allMembers = DEFAULT_MEMBERS.slice();
       return { isMeetingDay: true, todayKey, bestDates: [todayKey], maxCount: 0 };
     }
   }
@@ -890,41 +890,55 @@
   }
 
   // ===== 초기화 =====
-  async function init() {
-    const inp = document.getElementById('customMenuInput');
-    inp.addEventListener('input', updateSubmitButton);
-    inp.addEventListener('keypress', e => { if (e.key === 'Enter') submitSelection(); });
-
-    renderRestaurantMeta();
-
-    const result = await checkTodayMeeting();
-    meetingDate = result.todayKey;
-
+  // result가 null이면 아직 서버 확인 전 - 확정 문구 대신 중립 상태로 둔다.
+  function applyMeetingChip(result) {
     const chip = document.getElementById('meetingChip');
     const chipText = document.getElementById('meetingChipText');
     const dateDisp = document.getElementById('meetingDateDisplay');
     const topDate = document.getElementById('topDate');
 
-    if (result.isMeetingDay && result.todayKey) {
+    if (result && result.isMeetingDay && result.todayKey) {
       dateDisp.textContent = formatDate(result.todayKey);
       topDate.textContent = formatDate(result.todayKey);
       chipText.textContent = '모임일';
       chip.classList.remove('off');
-    } else {
-      const t = new Date();
-      dateDisp.textContent = `${t.getMonth() + 1}월 ${t.getDate()}일`;
-      topDate.textContent = `${t.getMonth() + 1}월 ${t.getDate()}일`;
-      chipText.textContent = '모임일 아님';
-      chip.classList.add('off');
+      return;
     }
 
-    await loadLunchData();
-    renderMembers(); renderMenuGrid(); renderStatusTable(); renderSummary();
-    updateCounters(); updateDock(); hideLoading();
+    const t = new Date();
+    dateDisp.textContent = `${t.getMonth() + 1}월 ${t.getDate()}일`;
+    topDate.textContent = `${t.getMonth() + 1}월 ${t.getDate()}일`;
+    chipText.textContent = result ? '모임일 아님' : '확인 중';
+    chip.classList.add('off');
+  }
+
+  function renderData() {
+    renderMembers(); renderStatusTable(); renderSummary(); updateCounters();
+  }
+
+  async function init() {
+    const inp = document.getElementById('customMenuInput');
+    inp.addEventListener('input', updateSubmitButton);
+    inp.addEventListener('keypress', e => { if (e.key === 'Enter') submitSelection(); });
+
+    // 1) 서버를 기다리지 않고 먼저 그린다.
+    //    식당/메뉴/기본 멤버는 전부 로컬 상수라 즉시 렌더 가능하다.
+    renderRestaurantMeta();
+    renderMenuGrid();
+    applyMeetingChip(null);
+    renderData();
+    updateDock();
+    hideLoading();
+
+    // 2) 두 요청은 서로의 결과를 쓰지 않으므로 병렬로 받는다.
+    const [meeting] = await Promise.all([checkTodayMeeting(), loadLunchData()]);
+    meetingDate = meeting.todayKey;
+    applyMeetingChip(meeting);
+    renderData();
 
     setInterval(async () => {
       await loadLunchData();
-      renderMembers(); renderStatusTable(); renderSummary(); updateCounters();
+      renderData();
     }, 10000);
   }
 
