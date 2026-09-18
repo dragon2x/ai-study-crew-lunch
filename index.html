@@ -520,7 +520,17 @@
 <script>
   // ===== 설정 =====
   const STUDY_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz2CCEL-5_-BHuSrVxEzSyQGmoFEfXyPGniQ_spVDmeBmtxoBajTboZuo_xK9ngyHIv7A/exec';
-  const LUNCH_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyEErpXKVNuL3X4WWj5P3yfGIWyj8Px0oZgTtIzuKGIOcnoe3TpfBfW2Y-ScmuPrhZL/exec';
+  // 점심 데이터는 Firebase Realtime Database 에 저장한다 (2026-09-18 Apps Script 에서 이전).
+  // apiKey 등은 공개용 식별자이고, 쓰기 제한은 database.rules.json 이 맡는다.
+  const FIREBASE_CONFIG = {
+    apiKey: 'AIzaSyDd-E-ehLWTKUYKKGJFLm5HqU6i9A2ENus',
+    authDomain: 'ai-study-crew-lunch-aec4d.firebaseapp.com',
+    databaseURL: 'https://ai-study-crew-lunch-aec4d-default-rtdb.asia-southeast1.firebasedatabase.app',
+    projectId: 'ai-study-crew-lunch-aec4d',
+    appId: '1:172008536628:web:a8edb7eb4a82c690c0a861'
+  };
+  const FIREBASE_SDK = 'https://www.gstatic.com/firebasejs/12.9.0/';
+  const CACHE_KEY = 'lunchCache.v1';
 
   const RESTAURANTS = {
     mcdonalds: {
@@ -561,6 +571,7 @@
   let selectedMember = null;
   let selectedMenu = null;
   let lunchData = {};
+  let fb = null;              // { db, ref, set, get, onValue } — SDK 로드 후 채워진다
   let meetingDate = null;
   let todayRestaurantKey = 'mcdonalds';
   let todayRestaurant = RESTAURANTS.mcdonalds;
@@ -668,33 +679,63 @@
       return { isMeetingDay: true, todayKey, bestDates: [todayKey], maxCount: 0 };
     }
   }
-  async function loadLunchData() {
-    const weekId = getCurrentWeekId();
+  // 마지막으로 본 현황을 기기에 남겨 두고, 다음에 열 때 첫 패킷 전에 먼저 그린다.
+  function readCache() {
     try {
-      const response = await fetch(LUNCH_SCRIPT_URL + '?action=loadLunch&weekId=' + encodeURIComponent(weekId), { cache: 'no-cache' });
-      const data = await response.json();
-      if (data.success) {
-        lunchData = data.lunchData || {};
-        if (data.members && data.members.length > 0) allMembers = data.members;
+      const c = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+      if (c && c.weekId === getCurrentWeekId()) {
+        lunchData = c.lunchData || {};
+        if (Array.isArray(c.members) && c.members.length) allMembers = c.members;
+        return true;
       }
-    } catch (error) { console.error('점심 데이터 로드 실패:', error); }
+    } catch (e) { /* 손상된 캐시는 무시 */ }
+    return false;
+  }
+  function writeCache() {
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ weekId: getCurrentWeekId(), lunchData, members: allMembers }));
+    } catch (e) { /* 저장 공간 부족 등은 무시 */ }
+  }
+
+  // Firebase SDK 를 첫 화면을 그린 뒤에 늦게 불러온다 (첫 표시를 막지 않게).
+  async function connectFirebase() {
+    const [{ initializeApp }, { getDatabase, ref, set, get, onValue }] = await Promise.all([
+      import(FIREBASE_SDK + 'firebase-app.js'),
+      import(FIREBASE_SDK + 'firebase-database.js')
+    ]);
+    const app = initializeApp(FIREBASE_CONFIG);
+    fb = { db: getDatabase(app), ref, set, get, onValue };
+  }
+  // 이번 주 현황을 실시간 구독한다. 누가 고르면 폴링 없이 바로 반영된다.
+  let subscribedWeekId = null, unsubscribeLunch = null;
+  function subscribeLunchData() {
+    const weekId = getCurrentWeekId();
+    if (unsubscribeLunch) unsubscribeLunch();
+    subscribedWeekId = weekId;
+    unsubscribeLunch = fb.onValue(fb.ref(fb.db, 'lunch/' + weekId), snap => {
+      lunchData = snap.val() || {};
+      writeCache();
+      renderData();
+    }, error => console.error('점심 데이터 구독 실패:', error));
+    fb.get(fb.ref(fb.db, 'members')).then(snap => {
+      const m = snap.val();
+      if (Array.isArray(m) && m.length > 0) { allMembers = m; writeCache(); renderData(); }
+    }).catch(error => console.error('멤버 목록 로드 실패:', error));
   }
   async function saveLunchData() {
     const weekId = getCurrentWeekId();
     const customMenu = selectedMenu === 'other' ? document.getElementById('customMenuInput').value.trim() : '';
     try {
-      const params = new URLSearchParams({
-        action: 'saveLunch', weekId, memberName: selectedMember,
-        menuChoice: selectedMenu, customMenu, restaurant: todayRestaurantKey
+      if (!fb) await connectFirebase();
+      // 저장 한 번으로 끝. 화면 갱신은 onValue 구독이 맡는다(재조회 없음).
+      await fb.set(fb.ref(fb.db, 'lunch/' + weekId + '/' + selectedMember), {
+        menuChoice: selectedMenu, customMenu, restaurant: todayRestaurantKey,
+        timestamp: new Date().toISOString()
       });
-      const response = await fetch(LUNCH_SCRIPT_URL + '?' + params.toString(), { cache: 'no-cache' });
-      const result = await response.json();
-      if (!result.success) { alert('저장에 실패했습니다: ' + result.error); return; }
-      await loadLunchData();
-      renderMembers(); renderStatusTable(); renderSummary(); updateCounters();
     } catch (error) {
       console.error('점심 메뉴 저장 실패:', error);
       alert('저장 중 오류가 발생했습니다. 다시 시도해주세요.');
+      throw error;
     }
   }
 
@@ -855,9 +896,16 @@
     const btn = document.getElementById('submitBtn');
     btn.textContent = '저장 중…'; btn.disabled = true;
     const customMenu = selectedMenu === 'other' ? document.getElementById('customMenuInput').value.trim() : '';
-    lunchData[selectedMember] = { menuChoice: selectedMenu, customMenu, timestamp: new Date().toISOString() };
+    const previous = lunchData[selectedMember];
+    lunchData[selectedMember] = { menuChoice: selectedMenu, customMenu, restaurant: todayRestaurantKey, timestamp: new Date().toISOString() };
     renderStatusTable(); renderSummary(); updateCounters();
-    await saveLunchData();
+    try {
+      await saveLunchData();
+    } catch (e) {
+      if (previous) lunchData[selectedMember] = previous; else delete lunchData[selectedMember];
+      renderData(); updateSubmitButton();
+      return;
+    }
     selectedMember = null; selectedMenu = null;
     btn.textContent = '✓ 저장 완료'; btn.classList.add('done');
     renderMembers(); renderMenuGrid();
@@ -923,6 +971,8 @@
 
     // 1) 서버를 기다리지 않고 먼저 그린다.
     //    식당/메뉴/기본 멤버는 전부 로컬 상수라 즉시 렌더 가능하다.
+    //    이번 주 현황이 기기에 남아 있으면 그것까지 바로 그린다.
+    readCache();
     renderRestaurantMeta();
     renderMenuGrid();
     applyMeetingChip(null);
@@ -930,16 +980,25 @@
     updateDock();
     hideLoading();
 
-    // 2) 두 요청은 서로의 결과를 쓰지 않으므로 병렬로 받는다.
-    const [meeting] = await Promise.all([checkTodayMeeting(), loadLunchData()]);
-    meetingDate = meeting.todayKey;
-    applyMeetingChip(meeting);
-    renderData();
+    // 2) 점심 현황은 Firebase 실시간 구독(첫 스냅샷 ≈ 0.3초), 모임일 판정은 느린 Apps Script 라
+    //    화면을 막지 않고 따로 받는다. 둘 다 서로의 결과를 쓰지 않는다.
+    checkTodayMeeting().then(meeting => {
+      meetingDate = meeting.todayKey;
+      applyMeetingChip(meeting);
+    });
+    try {
+      await connectFirebase();
+      subscribeLunchData();
+    } catch (error) {
+      console.error('Firebase 연결 실패:', error);
+    }
 
-    setInterval(async () => {
-      await loadLunchData();
-      renderData();
-    }, 10000);
+    // 3) 탭을 오래 열어 둔 채 주가 바뀌면(월요일 0시) 새 주차로 구독을 옮긴다.
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && fb && subscribedWeekId !== getCurrentWeekId()) {
+        lunchData = {}; renderData(); subscribeLunchData();
+      }
+    });
   }
 
   init();

@@ -1,0 +1,20 @@
+{
+  "rules": {
+    "members": { ".read": true, ".write": false },
+    "lunch": {
+      ".read": true,
+      "$weekId": {
+        ".validate": "$weekId.matches(/^\\d{4}-W\\d{2}$/)",
+        "$memberName": {
+          ".write": true,
+          ".validate": "$memberName.length <= 20 && newData.hasChildren(['menuChoice', 'timestamp'])",
+          "menuChoice": { ".validate": "newData.isString() && newData.val().length <= 40" },
+          "customMenu": { ".validate": "newData.isString() && newData.val().length <= 100" },
+          "restaurant": { ".validate": "newData.isString() && newData.val().length <= 20" },
+          "timestamp":  { ".validate": "newData.isString() && newData.val().length <= 40" },
+          "$other": { ".validate": false }
+        }
+      }
+    }
+  }
+}
