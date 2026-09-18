@@ -1,6 +1,13 @@
 {
   "rules": {
-    "members": { ".read": true, ".write": false },
+    "members": {
+      ".read": true,
+      ".write": true,
+      ".validate": "newData.hasChildren()",
+      "$i": {
+        ".validate": "$i.matches(/^([0-9]|1[0-9])$/) && newData.isString() && newData.val().length >= 1 && newData.val().length <= 20"
+      }
+    },
     "lunch": {
       ".read": true,
       "$weekId": {
@@ -8,11 +15,45 @@
         "$memberName": {
           ".write": true,
           ".validate": "$memberName.length <= 20 && newData.hasChildren(['menuChoice', 'timestamp'])",
-          "menuChoice": { ".validate": "newData.isString() && newData.val().length <= 40" },
-          "customMenu": { ".validate": "newData.isString() && newData.val().length <= 100" },
-          "restaurant": { ".validate": "newData.isString() && newData.val().length <= 20" },
-          "timestamp":  { ".validate": "newData.isString() && newData.val().length <= 40" },
-          "$other": { ".validate": false }
+          "menuChoice": {
+            ".validate": "newData.isString() && newData.val().length <= 40"
+          },
+          "customMenu": {
+            ".validate": "newData.isString() && newData.val().length <= 100"
+          },
+          "restaurant": {
+            ".validate": "newData.isString() && newData.val().length <= 20"
+          },
+          "timestamp": {
+            ".validate": "newData.isString() && newData.val().length <= 40"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
+    },
+    "study": {
+      ".read": true,
+      "$weekId": {
+        ".validate": "$weekId.matches(/^\\d{4}-W\\d{2}$/)",
+        "availability": {
+          "$day": {
+            ".validate": "$day == 'wed' || $day == 'thu' || $day == 'fri'",
+            "$name": {
+              ".write": true,
+              ".validate": "$name.length <= 20 && newData.isBoolean()"
+            }
+          }
+        },
+        "submitted": {
+          "$name": {
+            ".write": true,
+            ".validate": "$name.length <= 20 && newData.isBoolean()"
+          }
+        },
+        "$other": {
+          ".validate": false
         }
       }
     }
