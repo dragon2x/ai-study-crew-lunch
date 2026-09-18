@@ -715,7 +715,7 @@
       ]);
       const app = initializeApp(FIREBASE_CONFIG);
       fb = { db: getDatabase(app), ref, set, get, onValue };
-    })();
+    })().catch(e => { fbConnecting = null; throw e; });   // 실패(오프라인 등)하면 다음 호출 때 다시 시도하게 (하린 2026-09-18)
     return fbConnecting;
   }
   // 이번 주 현황을 실시간 구독한다. 누가 고르면 폴링 없이 바로 반영된다.
